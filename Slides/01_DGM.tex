@@ -6,22 +6,33 @@
 \useoutertheme[subsection=false]{miniframes}
 \usecolortheme{default}
 
+
+\setbeamercolor{bloqueAmarilloCc}{bg=orange!90!yellow, fg=white} % Cabecera
+\setbeamercolor{bloqueAmarilloCu}{bg=orange!6!yellow!4!white, fg=black} % Cuerpo
+
+\newenvironment{definitionblock}[1]{%
+  \begin{beamerboxesrounded}[upper=bloqueAmarilloCc, lower=bloqueAmarilloCu, shadow=true]{#1}%
+}{%
+  \end{beamerboxesrounded}%
+}
+
+
 \AtBeginSection[]
 {
   \begin{frame}
-    \frametitle{Table of Contents}
+    \frametitle{Índice}
     \tableofcontents[currentsection]
   \end{frame}
 }
 
 
 
-\title[1. DGM]{Chapter 1. Deep Generative Modeling}
+\title[1. DGM]{Capítulo 1. Deep Generative Models}
 \subtitle{Trabajo de Fin de Grado}
 \author[Arturo]{Arturo Olivares Martos}
 \institute[DGIIM - UGR]{Doble Grado en Ingeniería Informática y Matemáticas\\Universidad de Granada}
 \date{\today}
-% \logo{\includegraphics[height=1cm]{UGR-logo}}
+\logo{\includegraphics[height=1cm]{Aux/UGR-Logo.png}}
 
 \begin{document}
 
@@ -29,6 +40,93 @@
     \titlepage
 \end{frame}
 
+\section{Objetivo de un DGM}
+\begin{frame}
+	\frametitle{Distribución de los datos}
+
+	Los datos de alta dimensionalidad con los que trabajemos siguien una distribución de probabilidad:
+	\begin{equation*}
+		p_{\text{data}}
+	\end{equation*}\pause
+
+	\begin{itemize}
+		\item Las combinaciones reales de los datos tendrán alta probabilidad, mientras que las combinaciones irreales (ruido, etc.) tendrán probabilidad prácticamente nula.
+		\pause
+		\item Esta distribución es \emph{desconocida} (tan solo tenemos acceso a una muestra de datos).
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Distribución del modelo}
+	
+	El DGM emplea una DNN con parámetros $\phi$ para obtener una distribución de probabilidad
+	\begin{equation*}
+		p_{\phi}
+	\end{equation*}
+	de manera que $p_{\phi} \approx p_{\text{data}}$.\pause
+	\begin{alertblock}{Objetivo de un DGM}
+		Aprender la distribución $p_{\text{data}}$ a partir de una muestra de datos, para poder generar nuevas muestras que sigan la misma distribución.
+	\end{alertblock}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Generación de nuevas muestras}
+	
+	Una vez aprendido el modelo, podemos generar nuevas muestras de datos siguiendo la distribución $p_{\phi}$:
+	\begin{equation*}
+		x \sim p_{\phi} \approx p_{\text{data}}
+	\end{equation*}
+	
+	\pause
+	Esta generación debe cumplir:\pause
+	\begin{itemize}
+		\item Generación realista (Test de Lovelance)\pause
+		\item Generación controlada
+	\end{itemize}
+\end{frame}
+
+
+\section{Función de pérdida}
+
+\begin{frame}
+	\frametitle{Función de pérdida}
+	
+	Para entrenar la DNN, necesitamos una función de pérdida que mida la diferencia entre $p_{\phi}$ y $p_{\text{data}}$.
+	\begin{equation*}
+		\mathcal{D}(p_{\text{data}}, p_{\phi})
+	\end{equation*}
+
+	Entrenar la DNN consiste en obtener los parámetros $\phi$ que minimicen la función de pérdida.
+	\pause
+	Hay varias funciones de pérdida que se pueden emplear.
+\end{frame}
+
+\begin{frame}
+	\frametitle{Divergencia KL}
+	\begin{definitionblock}{Divergencia KL}
+		La divergencia KL entre dos distribuciones de probabilidad $p_{\text{data}}$ y $p_{\phi}$ es:
+		\begin{equation*}
+			\mathcal{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) := \int p_{\text{data}}(x) \log \frac{p_{\text{data}}(x)}{p_{\phi}(x)} dx
+		\end{equation*}
+	\end{definitionblock}
+	\pause
+	
+	Emplear la divergencia KL fuerza la \alert{cobertura del modelo}; es decir, toda muestra $x$ con $p_{\text{data}}(x) > 0$ debe tener $p_{\phi}(x) > 0$ (para no dividir entre cero).
+	\begin{equation*}
+		p_{\text{data}}(x) > 0 \implies p_{\phi}(x) > 0\qquad \forall x
+	\end{equation*}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Divergencia KL}
+	\begin{block}{Propiedades}
+		\begin{itemize}
+			\item No es simétrica: $\mathcal{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) \neq \mathcal{D}_{\text{KL}}(p_{\phi} || p_{\text{data}})$
+			\item Es no negativa: $\mathcal{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) \geq 0$
+			\item Es cero si y solo si $p_{\text{data}} = p_{\phi}$ c.p.d.
+		\end{itemize}
+	\end{block}
+\end{frame}
 
 
 \end{document}
