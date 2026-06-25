@@ -1,11 +1,20 @@
 \documentclass{beamer}
 \usepackage[utf8]{inputenc}
-\usepackage[spanish]{babel}
+\usepackage[main=spanish]{babel}
 
 \usetheme{Madrid}
 \useoutertheme[subsection=false]{miniframes}
 \usecolortheme{default}
 
+\uselanguage{spanish}
+\languagepath{spanish}
+\deftranslation[to=spanish]{Lemma}{Lema}
+
+\newcommand{\bb}[1]{\mathbb{#1}}
+\newcommand{\cc}[1]{\mathcal{#1}}
+
+% Para poder poner \nicefrac{}{} en modo matemático
+\usepackage{nicefrac}
 
 \setbeamercolor{bloqueAmarilloCc}{bg=orange!90!yellow, fg=white} % Cabecera
 \setbeamercolor{bloqueAmarilloCu}{bg=orange!6!yellow!4!white, fg=black} % Cuerpo
@@ -91,26 +100,29 @@
 \begin{frame}
 	\frametitle{Función de pérdida}
 	
-	Para entrenar la DNN, necesitamos una función de pérdida que mida la diferencia entre $p_{\phi}$ y $p_{\text{data}}$.
-	\begin{equation*}
-		\mathcal{D}(p_{\text{data}}, p_{\phi})
-	\end{equation*}
-
-	Entrenar la DNN consiste en obtener los parámetros $\phi$ que minimicen la función de pérdida.
+	\begin{definitionblock}{Divergencia}
+		Una divergencia entre dos distribuciones de probabilidad $p_{\text{data}}$ y $p_{\phi}$ es una función $\cc{D}(p_{\text{data}}, p_{\phi})$ que cumple:
+		\begin{itemize}
+			\item No negatividad: $\cc{D}(p_{\text{data}}, p_{\phi}) \geq 0$
+			\item Identidad: $\cc{D}(p_{\text{data}}, p_{\phi}) = 0 \iff p_{\text{data}} = p_{\phi}$ c.p.d.
+		\end{itemize}
+	\end{definitionblock}
 	\pause
-	Hay varias funciones de pérdida que se pueden emplear.
+
+	Entrenar la DNN consiste en obtener los parámetros $\phi$ que minimicen la función de pérdida. Hay varias funciones de pérdida que se pueden emplear.
 \end{frame}
 
 \begin{frame}
 	\frametitle{Divergencia KL}
-	\begin{definitionblock}{Divergencia KL}
-		La divergencia KL entre dos distribuciones de probabilidad $p_{\text{data}}$ y $p_{\phi}$ es:
+	\begin{definitionblock}{Divergencia KL Directa}
+		La divergencia KL directa entre dos distribuciones de probabilidad $p_{\text{data}}$ y $p_{\phi}$ es:
 		\begin{equation*}
-			\mathcal{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) := \int p_{\text{data}}(x) \log \frac{p_{\text{data}}(x)}{p_{\phi}(x)} dx
+			\cc{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) := \int p_{\text{data}}(x) \log \frac{p_{\text{data}}(x)}{p_{\phi}(x)} dx
 		\end{equation*}
+		donde se ha tomado la primera distribución $p_{\text{data}}$ como referencia.
 	\end{definitionblock}
 	\pause
-	
+
 	Emplear la divergencia KL fuerza la \alert{cobertura del modelo}; es decir, toda muestra $x$ con $p_{\text{data}}(x) > 0$ debe tener $p_{\phi}(x) > 0$ (para no dividir entre cero).
 	\begin{equation*}
 		p_{\text{data}}(x) > 0 \implies p_{\phi}(x) > 0\qquad \forall x
@@ -119,14 +131,128 @@
 
 \begin{frame}
 	\frametitle{Divergencia KL}
-	\begin{block}{Propiedades}
-		\begin{itemize}
-			\item No es simétrica: $\mathcal{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) \neq \mathcal{D}_{\text{KL}}(p_{\phi} || p_{\text{data}})$
-			\item Es no negativa: $\mathcal{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) \geq 0$
-			\item Es cero si y solo si $p_{\text{data}} = p_{\phi}$ c.p.d.
-		\end{itemize}
+	Puesto que no conocemos la distribución $p_{\text{data}}$, no podemos calcular 	de forma directa la divergencia KL.
+	\begin{align*}
+		\cc{D}_{\text{KL}}(p_{\text{data}} || p_{\phi})
+		&:= \int p_{\text{data}}(x) \log \frac{p_{\text{data}}(x)}{p_{\phi}(x)} dx\\
+		&= \bb{E}_{x \sim p_{\text{data}}} \left[ \log \frac{p_{\text{data}}(x)}{p_{\phi}(x)} \right]\\
+		&= \bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\text{data}}(x) - \log p_{\phi}(x) \right]\\
+		&= \bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\text{data}}(x) \right] - \bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\phi}(x) \right]
+	\end{align*}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Divergencia KL}
+
+	\begin{definitionblock}{Entropía}
+		La entropía de una distribución de probabilidad $p_{\text{data}}$ es:
+		\begin{equation*}
+			\cc{H}(p_{\text{data}}) := -\int p_{\text{data}}(x) \log p_{\text{data}}(x) dx
+			= -\bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\text{data}}(x) \right]
+		\end{equation*}
+	\end{definitionblock}
+	\pause
+	\begin{block}{Cálculo de la divergencia KL}
+		\begin{equation*}
+			\cc{D}_{\text{KL}}(p_{\text{data}} || p_{\phi})
+			= -\cc{H}(p_{\text{data}}) - \bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\phi}(x) \right]
+		\end{equation*}
 	\end{block}
 \end{frame}
 
+
+
+\begin{frame}
+	\frametitle{Minimización de la divergencia KL}
+
+	\begin{center}
+		\alert{¡$\cc{H}(p_{\text{data}})$ no depende de los parámetros $\phi$!}
+	\end{center}
+	\begin{lemma}[Minimizar KL $\Longleftrightarrow$ MLE]
+		\begin{equation*}
+			\min_{\phi} \cc{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) \Longleftrightarrow \max_{\phi} \bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\phi}(x) \right]
+		\end{equation*}
+	\end{lemma}
+
+	\pause
+
+	Estimando mediante \alert{Monte Carlo} la esperanza (y teniendo en cuenta que se prefiere \alert{minimizar} la función de pérdida), obtenemos la función de pérdida empleada en la práctica:
+	\begin{equation*}
+		\hat{\cc{L}}_{\text{MLE}}(\phi) = \alert{-\frac{1}{N}} \sum_{i=1}^{N} \log p_{\phi}(x_i) \qquad x_i \sim p_{\text{data}}
+	\end{equation*}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Divergencia de Fisher}
+	\begin{definitionblock}{Divergencia de Fisher}
+		La divergencia de Fisher entre dos distribuciones de probabilidad $p_{\text{data}}$ y $p_{\phi}$ es:
+		\begin{equation*}
+			\cc{D}_{\text{F}}(p_{\text{data}} || p_{\phi}) := E_{x \sim p_{\text{data}}} \left[ \left\| \nabla_x \log p_{\text{data}}(x) - \nabla_x \log p_{\phi}(x) \right\|_2^2 \right]
+		\end{equation*}
+		donde se ha tomado la primera distribución $p_{\text{data}}$ como referencia.
+	\end{definitionblock}
+	\alert{¿Por qué se emplean los logaritmos? ¿No se podría calcular sin ellos?}
+\end{frame}
+
+\begin{frame}
+	\frametitle{$f$-Divergencias}
+	\begin{definitionblock}{$f$-Divergencia}
+		Sea $f: \bb{R}^{+} \to \bb{R}$ una función convexa con $f(1) = 0$. La $f$-divergencia entre dos distribuciones de probabilidad $p$ y $q$ es:
+		\begin{equation*}
+			\cc{D}_f(p || q)
+			:= \int q(x) f\left( \frac{p(x)}{q(x)} \right) dx
+		\end{equation*}
+	\end{definitionblock}
+\end{frame}
+\begin{frame}
+	\frametitle{$f$-Divergencias}
+	\begin{exampleblock}{Casos particulares}
+		\begin{itemize}
+			\item Divergencia KL directa $\cc{D}_{\text{KL}}(p || q)$:
+			$ f(u) = u \log u $
+			\item Divergencia de Jensen-Shannon $\cc{D}_{\text{JS}}(p || q)$:
+			$$ f(u) = \frac{1}{2} \left[ u\log u - (u+1) \log\left(\frac{u+1}{2}\right)\right] $$
+			\item Variación Total $\cc{D}_{\text{TV}}(p || q)$:
+			$ f(u) = \frac{1}{2} |u-1| $
+		\end{itemize}
+	\end{exampleblock}\pause
+		\begin{align*}
+			\cc{D}_{\text{JS}}(p || q) &= \frac{1}{2} \cc{D}_{\text{KL}}\left(p || \frac{1}{2}(p+q)\right) + \frac{1}{2} \cc{D}_{\text{KL}}\left(q || \frac{1}{2}(p+q)\right),\\
+			\cc{D}_{\text{TV}}(p, q) &= \frac{1}{2} \int |p - q| dx = \sup_{A \subset \bb{R}^D} |p(A) - q(A)|.
+		\end{align*}
+\end{frame}
+
+
+\section{Camino a obtener $p_{\phi}$}
+
+\begin{frame}
+	\frametitle{Camino a obtener $p_{\phi}$}
+	Para que la función $p_{\phi}$ buscada sea realmente una función de densidad de probabilidad, debe cumplir:
+	\begin{enumerate}
+		\item No negatividad:
+		\begin{equation*}
+			p_{\phi}(x) \geq 0 \qquad \forall x
+		\end{equation*}
+		\item Normalización:
+		\begin{equation*}
+			\int p_{\phi}(x) dx = 1
+		\end{equation*}
+	\end{enumerate}
+
+	\pause
+
+	La DNN puede producir $E_{\phi}(x) \in \bb{R}$ para cada entrada $x$, pero hemos de realizar varias transformaciones para obtener $p_{\phi}(x)$.
+\end{frame}
+\begin{frame}
+	\frametitle{No negatividad}
+
+	Para garantizar la no negatividad, podemos emplear cualquier función positiva a $E_{\phi}(x)$, como $|E_{\phi}(x)|$ o $(E_{\phi}(x))^2$.\vspace{1cm} \pause 
+	
+	En la práctica, se emplea la función exponencial:
+	\begin{equation*}
+		\tilde{p}_{\phi}(x) = \exp(E_{\phi}(x)) \geq 0 \qquad \forall x
+	\end{equation*}
+\end{frame}
 
 \end{document}
