@@ -157,7 +157,11 @@
 			\cc{D}_{\text{KL}}(p_{\text{data}} || p_{\phi})
 			= -\cc{H}(p_{\text{data}}) - \bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\phi}(x) \right]
 		\end{equation*}
-	\end{block}
+	\end{block}\pause
+
+	\begin{center}
+		\alert{¡$\cc{H}(p_{\text{data}})$ no depende de los parámetros $\phi$!}
+	\end{center}
 \end{frame}
 
 
@@ -165,9 +169,6 @@
 \begin{frame}
 	\frametitle{Minimización de la divergencia KL}
 
-	\begin{center}
-		\alert{¡$\cc{H}(p_{\text{data}})$ no depende de los parámetros $\phi$!}
-	\end{center}
 	\begin{lemma}[Minimizar KL $\Longleftrightarrow$ MLE]
 		\begin{equation*}
 			\min_{\phi} \cc{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) \Longleftrightarrow \max_{\phi} \bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\phi}(x) \right]
@@ -253,6 +254,107 @@
 	\begin{equation*}
 		\tilde{p}_{\phi}(x) = \exp(E_{\phi}(x)) \geq 0 \qquad \forall x
 	\end{equation*}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Normalización}
+	Para garantizar la normalización, podemos dividir la función $\tilde{p}_{\phi}(x)$ entre su integral:
+	\begin{equation*}
+		p_{\phi}(x) = \dfrac{\tilde{p}_{\phi}(x)}{\displaystyle
+		\int \tilde{p}_{\phi}(x') dx'} = \frac{\exp(E_{\phi}(x))}{Z({\phi})}
+	\end{equation*}
+	donde se ha definido la \emph{constante de normalización} o \emph{función de partición}:
+	\begin{equation*}
+		Z({\phi}) := \int \tilde{p}_{\phi}(x') dx' = \int \exp(E_{\phi}(x')) dx'
+	\end{equation*}
+	
+	\pause
+	Esta integral es muy costosa de calcular, por lo que distintos tipos de DGM emplean distintas técnicas para aproximarla o evitarla.
+\end{frame}
+
+\section{DGM destacados}
+
+\begin{frame}
+	\frametitle{DGM destacados}
+	Distintos DGM emplean distintas técnicas para aproximar o evitar la integral de normalización, haciendo distintos trade-offs entre:\pause
+	\begin{itemize}
+		\item \underline{Tractabilidad}: qué tan fácil es calcular la función de densidad de probabilidad $p_{\phi}(x)$ para una muestra $x$ dada.\pause
+		\item \underline{Expresividad}: qué tan bien puede aproximar la verdadera complejidad de los datos.\pause
+		\item \underline{Eficiencia de entrenamiento}: qué tan rápido se puede entrenar el modelo.
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Modelos Basados en Energía (EBM)}
+	\begin{definitionblock}{Modelo Basado en Energía}
+		Un Modelo Basado en Energía (EBM) es un DGM que emplea una DNN para obtener una función de energía $E_{\phi}(x)$ \emph{(donde se asigna baja energía a los datos más probables)}, y define:
+		\begin{equation*}
+			p_{\phi}(x) = \frac{\exp(\alert{-}E_{\phi}(x))}{Z({\phi})}
+			\qquad \text{con} \qquad Z({\phi}) := \int \exp(\alert{-}E_{\phi}(x')) dx'
+		\end{equation*}
+	\end{definitionblock}\vspace{0.5cm}
+	
+	\pause
+
+	Los Modelos de Difusión generarán muestras usando \emph{el gradiente del logaritmo de la función de densidad de probabilidad}, evitando así calcular $Z({\phi})$.
+
+	\begin{center}
+		\alert{De aquí en adelante, estoy más perdido.}
+	\end{center}
+
+\end{frame}
+
+\begin{frame}
+	\frametitle{Modelos Autoregresivos (AR)}
+	\begin{definitionblock}{Modelo Autoregresivo}
+		Un Modelo Autoregresivo (AR) es un DGM que descompone la función de densidad de probabilidad $p_{\phi}(x)$ en una cadena de distribuciones condicionales:
+		\begin{equation*}
+			p_{\phi}(x) = \prod_{i=1}^{D} p_{\phi}(x_i | x_{<i})
+		\end{equation*}
+		donde $x=(x_1, x_2, \dots, x_D)$ y $x_{<i} = (x_1, x_2, \dots, x_{i-1})$.
+	\end{definitionblock}\pause
+	Cada distribución condicional $p_{\phi}(x_i | x_{<i})$ se modela mediante una DNN y se normaliza por construcción (empleando determinadas funciones de activación como \emph{softmax} o \emph{Gaussiana parametrizada}), evitando así calcular $Z({\phi})$.
+	\begin{center}
+		\alert{¿Esto no se puede hacer con el resto?}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Autoencoders Variacionales (VAE)}
+	\begin{definitionblock}{Autoencoder Variacional}
+		Un Autoencoder Variacional (VAE) es un DGM que emplea variables latentes $z$ que representan estructuras de alto nivel de los datos.\pause Emplea dos DNN:
+		\begin{itemize}
+			\item Un \emph{encoder} $q_{\theta}(z|x)$ que aproxima la distribución posterior de las variables latentes dado un dato $x$.\pause
+			\item Un \emph{decoder} $p_{\phi}(x|z)$ que reconstruye el dato $x$ a partir de las variables latentes $z$.
+		\end{itemize}
+	\end{definitionblock}
+\end{frame}
+\begin{frame}
+	\frametitle{Autoencoders Variacionales (VAE)}
+
+	En vez de maximizar la probabilidad logarítmica de los datos, el VAE maximiza una cota inferior de la misma, llamada \emph{Evidence Lower Bound (ELBO)}:
+	\begin{equation*}
+		\cc{L}_{\text{ELBO}}(\theta, \phi; x) = \bb{E}_{q_{\theta}(z|x)} [\log p_{\phi}(x|z)] - \cc{D}_{\text{KL}}(q_{\theta}(z|x) \parallel p_{\text{prior}}(z))
+	\end{equation*}\pause
+	\begin{itemize}
+		\item El primer término representa la reconstrucción correcta del dato $x$ a partir de las variables latentes $z$.\pause
+		\item El segundo término busca regularizar la distribución posterior de las variables latentes para que se acerque a una distribución previa simple (como una Gaussiana estándar), evitando así el \emph{overfitting}.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Flujos Normales (NF)}
+	\begin{definitionblock}{Flujo Normal}
+		Un Flujo Normal (NF) es un DGM que transforma una distribución simple de variables latentes $z \sim p_{\text{prior}}(z)$ (como una Gaussiana estándar) en la distribución de los datos $x \sim p_{\phi}(x)$ mediante una función (o cadena de funciones) invertible y diferenciable $f_{\phi}$:
+		\begin{equation*}
+			x = f_{\phi}(z) \qquad \text{y} \qquad z = f_{\phi}^{-1}(x)
+		\end{equation*}
+		La función de densidad de probabilidad $p_{\phi}(x)$ se obtiene mediante el cambio de variable:
+		\begin{equation*}
+			p_{\phi}(x) = p_{\text{prior}}(z) \left| \det \left( \frac{\partial f_{\phi}^{-1}(x)}{\partial x} \right) \right|
+		\end{equation*}
+	\end{definitionblock}
 \end{frame}
 
 \end{document}
