@@ -294,14 +294,14 @@
 			\qquad \text{con} \qquad Z({\phi}) := \int \exp(\alert{-}E_{\phi}(x')) dx'
 		\end{equation*}
 	\end{definitionblock}\vspace{0.5cm}
-	
-	\pause
-
-	Los Modelos de Difusión generarán muestras usando \emph{el gradiente del logaritmo de la función de densidad de probabilidad}, evitando así calcular $Z({\phi})$.
 
 	\begin{center}
 		\alert{De aquí en adelante, estoy más perdido.}
 	\end{center}
+	
+	\pause
+
+	Los Modelos de Difusión generarán muestras usando \emph{el gradiente del logaritmo de la función de densidad de probabilidad}, evitando así calcular $Z({\phi})$.
 
 \end{frame}
 
@@ -350,11 +350,41 @@
 		\begin{equation*}
 			x = f_{\phi}(z) \qquad \text{y} \qquad z = f_{\phi}^{-1}(x)
 		\end{equation*}
-		La función de densidad de probabilidad $p_{\phi}(x)$ se obtiene mediante el cambio de variable:
-		\begin{equation*}
-			p_{\phi}(x) = p_{\text{prior}}(z) \left| \det \left( \frac{\partial f_{\phi}^{-1}(x)}{\partial x} \right) \right|
-		\end{equation*}
 	\end{definitionblock}
+\end{frame}
+\begin{frame}
+	\frametitle{Flujos Normales (NF)}
+
+	La función de densidad de probabilidad $p_{\phi}(x)$ se obtiene mediante el cambio de variable:
+	\begin{equation*}
+		p_{\phi}(x) = p_{\text{prior}}(f_{\phi}^{-1}(x)) \left| \det \left( \frac{\partial f_{\phi}^{-1}(x)}{\partial x} \right) \right|
+	\end{equation*}
+	\pause
+	Al estar $p_{\text{prior}}(z)$ normalizada, también lo estará $p_{\phi}(x)$ automáticamente, evitando así calcular $Z({\phi})$.
+	\begin{align*}
+		\int p_{\phi}(x) dx
+		&= \int p_{\text{prior}}(f_{\phi}^{-1}(x)) \left| \det \left( \frac{\partial f_{\phi}^{-1}(x)}{\partial x} \right) \right| dx\\
+		&= \int p_{\text{prior}}(z) dz = 1
+	\end{align*}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Redes Generativas Adversarias (GAN)}
+	\begin{definitionblock}{Red Generativa Adversaria}
+		Una Red Generativa Adversaria (GAN) es un DGM que emplea dos DNN:
+		\begin{itemize}
+			\item Un \emph{generador} $G_{\phi}$ que busca transformar ruido simple $z \sim p_{\text{prior}}(z)$ en muestras realistas $G_{\phi}(z)$.\pause
+			\item Un \emph{discriminador} $D_{\theta}$ que busca distinguir entre muestras reales $x \sim p_{\text{data}}$ y muestras generadas $G_{\phi}(z)$.
+		\end{itemize}
+	\end{definitionblock}\pause
+	La función objetivo de la GAN es un juego de suma cero entre el generador y el discriminador:
+	\begin{equation*}
+		\min_{\phi} \max_{\theta} \underbrace{\bb{E}_{x \sim p_{\text{data}}} [\log D_{\theta}(x)]}_{\text{Reales}} + \underbrace{\bb{E}_{z \sim p_{\text{prior}}} [\log (1 - D_{\theta}(G_{\phi}(z)))]}_{\text{Generadas}}
+	\end{equation*}\vspace{-0.5cm}
+	\pause
+	\begin{center}
+		\alert{¡No calcula ni estima ninguna probabilidad!}
+	\end{center}
 \end{frame}
 
 \end{document}
