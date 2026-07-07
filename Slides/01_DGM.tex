@@ -1,38 +1,5 @@
 \documentclass{beamer}
-\usepackage[utf8]{inputenc}
-\usepackage[main=spanish]{babel}
-
-\usetheme{Madrid}
-\useoutertheme[subsection=false]{miniframes}
-\usecolortheme{default}
-
-\uselanguage{spanish}
-\languagepath{spanish}
-\deftranslation[to=spanish]{Lemma}{Lema}
-
-\newcommand{\bb}[1]{\mathbb{#1}}
-\newcommand{\cc}[1]{\mathcal{#1}}
-
-% Para poder poner \nicefrac{}{} en modo matemático
-\usepackage{nicefrac}
-
-\setbeamercolor{bloqueAmarilloCc}{bg=orange!90!yellow, fg=white} % Cabecera
-\setbeamercolor{bloqueAmarilloCu}{bg=orange!6!yellow!4!white, fg=black} % Cuerpo
-
-\newenvironment{definitionblock}[1]{%
-  \begin{beamerboxesrounded}[upper=bloqueAmarilloCc, lower=bloqueAmarilloCu, shadow=true]{#1}%
-}{%
-  \end{beamerboxesrounded}%
-}
-
-
-\AtBeginSection[]
-{
-  \begin{frame}
-    \frametitle{Índice}
-    \tableofcontents[currentsection]
-  \end{frame}
-}
+\input{prologo}
 
 
 
@@ -59,7 +26,7 @@
 	\end{equation*}\pause
 
 	\begin{itemize}
-		\item Las combinaciones reales de los datos tendrán alta probabilidad, mientras que las combinaciones irreales (ruido, etc.) tendrán probabilidad prácticamente nula.
+		\item Los datos reales tendrán alta probabilidad, mientras que los irreales (ruido, etc.) tendrán probabilidad prácticamente nula.
 		\pause
 		\item Esta distribución es \emph{desconocida} (tan solo tenemos acceso a una muestra de datos).
 	\end{itemize}
@@ -169,7 +136,7 @@
 \begin{frame}
 	\frametitle{Minimización de la divergencia KL}
 
-	\begin{lemma}[Minimizar KL $\Longleftrightarrow$ MLE]
+	\begin{lemma}[Minimizar KL $\Longleftrightarrow$ MLE (Maximum Likelihood Estimation)]
 		\begin{equation*}
 			\min_{\phi} \cc{D}_{\text{KL}}(p_{\text{data}} || p_{\phi}) \Longleftrightarrow \max_{\phi} \bb{E}_{x \sim p_{\text{data}}} \left[ \log p_{\phi}(x) \right]
 		\end{equation*}
@@ -179,7 +146,9 @@
 
 	Estimando mediante \alert{Monte Carlo} la esperanza (y teniendo en cuenta que se prefiere \alert{minimizar} la función de pérdida), obtenemos la función de pérdida empleada en la práctica:
 	\begin{equation*}
-		\hat{\cc{L}}_{\text{MLE}}(\phi) = \alert{-\frac{1}{N}} \sum_{i=1}^{N} \log p_{\phi}(x_i) \qquad x_i \sim p_{\text{data}}
+		\hat{\cc{L}}_{\text{MLE}}(\phi) = \alert{-\frac{1}{N}} \sum_{i=1}^{N} \log p_{\phi}(x_i)
+		= - \frac{1}{N} \log \prod_{i=1}^{N} p_{\phi}(x_i)
+		\qquad x_i \sim p_{\text{data}}
 	\end{equation*}
 \end{frame}
 
@@ -193,7 +162,6 @@
 		\end{equation*}
 		donde se ha tomado la primera distribución $p_{\text{data}}$ como referencia.
 	\end{definitionblock}
-	\alert{¿Por qué se emplean los logaritmos? ¿No se podría calcular sin ellos?}
 \end{frame}
 
 \begin{frame}
@@ -294,14 +262,10 @@
 			\qquad \text{con} \qquad Z({\phi}) := \int \exp(\alert{-}E_{\phi}(x')) dx'
 		\end{equation*}
 	\end{definitionblock}\vspace{0.5cm}
-
-	\begin{center}
-		\alert{De aquí en adelante, estoy más perdido.}
-	\end{center}
 	
 	\pause
 
-	Los Modelos de Difusión generarán muestras usando \emph{el gradiente del logaritmo de la función de densidad de probabilidad}, evitando así calcular $Z({\phi})$.
+	Los Modelos de Difusión generarán muestras usando \emph{el gradiente del logaritmo de la función de densidad de probabilidad}\footnote{Al aplicar el logaritmo al cociente y convertirlo en una resta, la derivada de la constante se anula, evitando calcularla.}, evitando así calcular $Z({\phi})$.
 
 \end{frame}
 
@@ -314,10 +278,7 @@
 		\end{equation*}
 		donde $x=(x_1, x_2, \dots, x_D)$ y $x_{<i} = (x_1, x_2, \dots, x_{i-1})$.
 	\end{definitionblock}\pause
-	Cada distribución condicional $p_{\phi}(x_i | x_{<i})$ se modela mediante una DNN y se normaliza por construcción (empleando determinadas funciones de activación como \emph{softmax} o \emph{Gaussiana parametrizada}), evitando así calcular $Z({\phi})$.
-	\begin{center}
-		\alert{¿Esto no se puede hacer con el resto?}
-	\end{center}
+	Cada distribución condicional $p_{\phi}(x_i | x_{<i})$ se modela mediante una DNN y se normaliza por construcción\footnote{Esto se puede hacer porque son unidimensionales.} (empleando determinadas funciones de activación como \emph{softmax} o \emph{Gaussiana parametrizada}), evitando así calcular $Z({\phi})$.
 \end{frame}
 
 \begin{frame}
@@ -344,16 +305,16 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{Flujos Normales (NF)}
+	\frametitle{Normalizing Flows (NF)}
 	\begin{definitionblock}{Flujo Normal}
-		Un Flujo Normal (NF) es un DGM que transforma una distribución simple de variables latentes $z \sim p_{\text{prior}}(z)$ (como una Gaussiana estándar) en la distribución de los datos $x \sim p_{\phi}(x)$ mediante una función (o cadena de funciones) invertible y diferenciable $f_{\phi}$:
+		Un Normalizing Flow (NF) es un DGM que transforma una distribución simple de variables latentes $z \sim p_{\text{prior}}(z)$ (como una Gaussiana estándar) en la distribución de los datos $x \sim p_{\phi}(x)$ mediante una función (o cadena de funciones) invertible y diferenciable $f_{\phi}$:
 		\begin{equation*}
 			x = f_{\phi}(z) \qquad \text{y} \qquad z = f_{\phi}^{-1}(x)
 		\end{equation*}
 	\end{definitionblock}
 \end{frame}
 \begin{frame}
-	\frametitle{Flujos Normales (NF)}
+	\frametitle{Normalizing Flows (NF)}
 
 	La función de densidad de probabilidad $p_{\phi}(x)$ se obtiene mediante el cambio de variable:
 	\begin{equation*}
@@ -369,9 +330,9 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{Redes Generativas Adversarias (GAN)}
+	\frametitle{Generative Adversarial Networks (GAN)}
 	\begin{definitionblock}{Red Generativa Adversaria}
-		Una Red Generativa Adversaria (GAN) es un DGM que emplea dos DNN:
+		Una GAN (Generative Adversarial Network) es un DGM que emplea dos DNN:
 		\begin{itemize}
 			\item Un \emph{generador} $G_{\phi}$ que busca transformar ruido simple $z \sim p_{\text{prior}}(z)$ en muestras realistas $G_{\phi}(z)$.\pause
 			\item Un \emph{discriminador} $D_{\theta}$ que busca distinguir entre muestras reales $x \sim p_{\text{data}}$ y muestras generadas $G_{\phi}(z)$.
