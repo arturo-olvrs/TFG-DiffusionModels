@@ -9,10 +9,21 @@
 \languagepath{spanish}
 \deftranslation[to=spanish]{Lemma}{Lema}
 
-\newcommand{\bb}[1]{\mathbb{#1}}
-\newcommand{\cc}[1]{\mathcal{#1}}
+\setbeamertemplate{caption}[numbered]
+
 
 \usepackage{nicefrac}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{tikz}
+
+
+
+
+\newcommand{\bb}[1]{\mathbb{#1}}
+\newcommand{\cc}[1]{\mathcal{#1}}
+\newcommand{\ul}[1]{\underline{#1}}
+\DeclareMathOperator{\diag}{diag}
+
 
 \setbeamercolor{bloqueAmarilloCc}{bg=orange!90!yellow, fg=white} % Cabecera
 \setbeamercolor{bloqueAmarilloCu}{bg=orange!6!yellow!4!white, fg=black} % Cuerpo

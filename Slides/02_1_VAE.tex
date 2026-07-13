@@ -10,6 +10,8 @@
 \date{\today}
 \logo{\includegraphics[height=1cm]{Aux/UGR-Logo.png}}
 
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta, calc}
+
 \begin{document}
 
 \begin{frame}
@@ -19,7 +21,278 @@
 \section{Autoencoders}
 \begin{frame}
 	\frametitle{Autoencoders}
+
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[
+            node distance=1.2cm,
+            block/.style={
+                draw, 
+                thick, 
+                fill=gray!10, 
+                rounded corners=6pt, 
+                minimum width=1.4cm, 
+                minimum height=1.5cm, 
+                align=center
+            },
+            encoder/.style={
+                draw,
+                thick,
+                fill=gray!15,
+                trapezium,
+                trapezium left angle=75,
+                trapezium right angle=75,
+                rotate=-90,
+                minimum width=2cm,
+                minimum height=1.7cm,
+                align=center
+            },
+            decoder/.style={
+                draw,
+                thick,
+                fill=gray!15,
+                trapezium,
+                trapezium left angle=75,
+                trapezium right angle=75,
+                rotate=90,
+                minimum width=2cm,
+                minimum height=1.7cm,
+                align=center
+            }
+        ]
+
+            \node[block] (x) at (0,0) {$x$};
+            
+            \node[encoder] (enc) at ($(x.center) + (2.2, 0)$) {};
+            \node[align=center] at (enc.center) {\textbf{Encoder}};
+            
+            \node[block, minimum width=1.5cm, minimum height=1cm] (z) at ($(enc.center) + (2.2, 0)$) {$z$};
+            
+            \node[decoder] (dec) at ($(z.center) + (2.2, 0)$) {};
+            \node[align=center] at (dec.center) {\textbf{Decoder}};
+            
+            \node[block] (x_prime) at ($(dec.center) + (2.2, 0)$) {$x'$};
+
+            % --- CONEXIONES ---
+            \draw[-Stealth, thick] (x.east) -- ($(enc.center) - (0.85, 0)$);
+            \draw[-Stealth, thick] ($(enc.center) + (0.85, 0)$) -- (z.west);
+            \draw[-Stealth, thick] (z.east) -- ($(dec.center) - (0.85, 0)$);
+            \draw[-Stealth, thick] ($(dec.center) + (0.85, 0)$) -- (x_prime.west);
+        \end{tikzpicture}
+        \caption{Esquema de un Autoencoder}
+        \label{fig:autoencoder}
+    \end{figure}
+
+    El entrenamiento consiste en minimizar la función de pérdida $\cc{L}(x, x')$ que mide la diferencia entre la entrada $x$ y la salida reconstruida $x'$.\pause
+
+    Generar nuevas muestras con un autoencoder consiste en muestrear un vector latente $z\in \bb{R}^d$ y decodificarlo.
 \end{frame}
+
+\begin{frame}
+    \frametitle{Problema de los Autoencoders}
+
+    \pause
+    \begin{center}
+        ¡El espacio latente no está estructurado!
+        
+        La mayoría de los vectores $z$ generados aleatoriamente no corresponden a datos válidos.
+    \end{center}\pause
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.75\textwidth]{Aux/AE_LatentSpace.jpg}
+        \caption{Espacio latente de un Autoencoder}
+        \label{fig:ae_latent_space}
+    \end{figure}
+\end{frame}
+
+\section{Variational Autoencoders (VAEs)}
+
+\begin{frame}
+    \frametitle{Solución de los VAEs}
+
+    Los VAEs resuelven el problema de los autoencoders de la siguiente manera:
+    \begin{itemize}
+        \item Se proporciona una estructura probabilística al espacio latente, forzando a que los vectores latentes sigan cierta distribución (normalmente, una distribución normal multivariante).
+        \begin{equation*}
+            z \sim p_{\text{prior}}(z) = \cc{N}(0, I)
+        \end{equation*}\pause
+        \item El encoder y el decoder no son funciones deterministas, sino que definen distribuciones de probabilidad condicionadas:
+        \begin{equation*}
+            q_\theta(z\mid x) \quad \text{y} \quad p_\phi(x\mid z)
+        \end{equation*}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Generación de nuevas muestras con VAEs}
+
+    Para generar nuevas muestras con un VAE, se sigue el siguiente procedimiento:
+    \begin{enumerate}
+        \item Muestrear un vector latente $z$ de la distribución prior $p_{\text{prior}}(z)$.\pause
+        \item Decodificar el vector latente $z$ para obtener una distribución de probabilidad sobre los datos $p_\phi(x\mid z)$.\pause
+        \item Muestrear un dato $x$ de la distribución $p_\phi(x\mid z)$.
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Encoding de datos con VAEs}
+
+    Para codificar un dato $x$ con un VAE, aplicando la Regla de Bayes, se obtiene la distribución $p_\phi(z\mid x)$:
+    \begin{equation*}
+        p_\phi(z\mid x) = \frac{p_\phi(x\mid z)p_{\text{prior}}(z)}{p_\phi(x)}
+        \quad
+        \text{donde }
+        p_\phi(x) = \int p_\phi(x\mid z)p_{\text{prior}}(z)\ dz
+    \end{equation*}\pause
+    \begin{center}
+        \alert{El cálculo de $p_\phi(x)$ es intractable, por lo que no se puede calcular $p_\phi(z\mid x)$ directamente.}
+    \end{center}\pause
+
+    El encoder se modela mediante una distribución de probabilidad $q_\theta(z\mid x)$ que aproxima a la distribución posterior $p_\phi(z\mid x)$:
+    \begin{equation*}
+        q_\theta(z\mid x) \approx p_\phi(z\mid x)
+    \end{equation*}
+\end{frame}
+
+\section{Entrenamiento de VAEs}
+
+\begin{frame}
+    \frametitle{Problema de la MLE}
+
+    Como en todo DGM, el entrenamiento de un VAE consiste en maximizar la verosimilitud de los datos:
+    \begin{equation*}
+        \max_{\phi} \bb{E}_{x\sim p_{\text{data}}(x)}[\log p_\phi(x)]
+    \end{equation*}\pause
+
+    Sin embargo, el cálculo de $p_\phi(x)$ es intractable, por lo que no se puede maximizar directamente la verosimilitud de los datos.
+\end{frame}
+\begin{frame}
+    \frametitle{Componentes a entrenar en un VAE}
+
+    Fijado un dato real $x$, un VAE tiene dos componentes a entrenar:
+    \begin{itemize}
+        \item \ul{Reconstrucción de datos:} A partir de $z\sim q_\theta(z\mid x)$, la reconstrucción de $x'$ mediante el decoder $p_\phi(x\mid z)$ debe ser lo más parecida posible a $x$.
+        
+        Se obtiene mediante la MLE de los datos reconstruidos:
+        \begin{equation*}
+            \max_{\phi} \bb{E}_{z\sim q_\theta(z\mid x)}[\log p_\phi(x\mid z)]
+        \end{equation*}\pause
+        \item \ul{Regularización del espacio latente:} Para otorgarle estructura al espacio latente.
+        \begin{equation*}
+            \min_{\theta} \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))
+        \end{equation*}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Evidence Lower Bound (ELBO)}
+
+    \begin{definitionblock}{Evidence Lower Bound (ELBO)}
+        La \textbf{evidence lower bound} (ELBO) de un dato $x$ es la siguiente función:
+        \begin{equation*}
+            \cc{L}_{\text{ELBO}}(x; \theta, \phi) = 
+            \underbrace{\bb{E}_{z\sim q_\theta(z\mid x)}[\log p_\phi(x\mid z)]}_{\text{Reconstrucción de datos}} -
+            \underbrace{\cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))}_{\text{Regularización del espacio latente}}
+        \end{equation*}
+    \end{definitionblock}\pause
+    Aunque no se pueda maximizar directamente la verosimilitud de los datos, se puede maximizar la ELBO, que es un límite inferior de la verosimilitud:
+    \begin{theorem}[Evidence Lower Bound]
+        \begin{equation*}
+            \log p_\phi(x) \geq \cc{L}_{\text{ELBO}}(x; \theta, \phi)
+            \qquad \forall x
+        \end{equation*}
+    \end{theorem}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Cota Total del Error}
+
+    En todo DGM, se busca minimizar $\cc{D}_{\text{KL}}(p_{\text{data}}(x)\| p_\phi(x))$. Puesto que no se puede calcular $p_\phi(x)$ y que los VAEs emplean un espacio latente, se define:
+    \begin{definitionblock}{Cota Total del Error}
+        Dado un VAE, la \textbf{cota total del error} es:
+        \begin{gather*}
+            \cc{D}_{\text{KL}}(q_\theta(x, z)\| p_\phi(x, z))
+            \\
+            \text{donde}\\
+            q_\theta(x, z) = p_{\text{data}}(x)q_\theta(z\mid x) \quad \text{y} \quad p_\phi(x, z) = p_{\text{prior}}(z)p_\phi(x\mid z)
+        \end{gather*}
+    \end{definitionblock}\pause
+
+    Aplicando la Regla de la Cadena de la Divergencia KL, se obtiene:
+    \begin{equation*}
+        \cc{D}_{\text{KL}}(p_{\text{data}}(x)\| p_\phi(x)) \leq \cc{D}_{\text{KL}}(q_\theta(x, z)\| p_\phi(x, z))
+    \end{equation*}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Error de Inferencia}
+
+    La cota total del error se puede descomponer en dos términos:
+    \begin{gather*}
+        \cc{D}_{\text{KL}}(q_\theta(x, z)\| p_\phi(x, z)) =\\=
+        \underbrace{\cc{D}_{\text{KL}}(p_{\text{data}}(x)\| p_\phi(x))}_{\text{Error Real de Modelado}} + 
+        \underbrace{\bb{E}_{x\sim p_{\text{data}}(x)}[\cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_\phi(z\mid x))]}_{\text{Error Medio de Inferencia}}
+    \end{gather*}\pause
+
+    El segundo término, el \textbf{error de inferencia}, mide la diferencia entre la distribución del espacio latente para un dato $x$, considerándolo tanto codificado como generado.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Error de Inferencia y ELBO}
+
+    La siguiente relación entre el error de inferencia y la ELBO se cumple:
+    \begin{equation*}
+        \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_\phi(z\mid x)) = \log p_\phi(x) - \cc{L}_{\text{ELBO}}(x; \theta, \phi)
+    \end{equation*}\pause
+
+    Por tanto, maximizar la ELBO es equivalente a minimizar el error de inferencia.
+\end{frame}
+
+\section{Gaussian VAEs}
+
+\begin{frame}
+    \frametitle{Gaussian VAEs}
+
+    En los Gaussian VAEs, el encoder y el decoder se modelan mediante distribuciones normales multivariantes. Sean $D, d\in \bb{N}$ las dimensiones de los datos y del espacio latente, respectivamente.\pause
+    Entonces:
+    \begin{description}
+        \item[Encoder:] $q_\theta(z\mid x) := \cc{N}(z; \mu_\theta(x), \diag(\sigma_\theta^2(x)))$\\\vspace{0.2cm}
+        
+        donde $\mu_\theta, \log \sigma_\theta^2: \bb{R}^D \to \bb{R}^d$ son las salidas de la red neuronal del encoder.\pause
+
+        \item[Decoder:] $p_\phi(x\mid z) := \cc{N}(x; \mu_\phi(z), \sigma^2 I)$\\\vspace{0.2cm}
+        
+        donde $\sigma^2\in \bb{R}^+$ es un hiperparámetro y $\mu_\phi: \bb{R}^d \to \bb{R}^D$ es la salida de la red neuronal del decoder.
+    \end{description}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Entrenamiento de Gaussian VAEs}
+
+    Las componentes de la ELBO para un Gaussian VAE se pueden calcular de manera analítica:
+    \begin{itemize}
+        \item Reconstrucción de datos:
+        \begin{equation*}
+            \bb{E}_{z\sim q_\theta(z\mid x)}[\log p_\phi(x\mid z)] = -\frac{1}{2\sigma^2}\bb{E}_{z\sim q_\theta(z\mid x)}[\|x - \mu_\phi(z)\|^2] + C
+        \end{equation*}
+        donde $C$ es una constante que no depende de los parámetros $\theta$ y $\phi$.\pause
+        \item Regularización del espacio latente:
+        \begin{equation*}
+            \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))
+        \end{equation*}
+        se puede calcular de manera analítica, ya que ambas distribuciones son normales multivariantes.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Entrenamiento de Gaussian VAEs}
+
+    Por tanto, maximizar la ELBO de un Gaussian VAE es equivalente a:
+    \begin{equation*}
+        \min_{\theta, \phi} \bb{E}_{x\sim q_\theta(z\mid x)}\left[\dfrac{1}{2\sigma^2}\|x - \mu_\phi(z)\|^2\right] + \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))
+    \end{equation*}
+\end{frame}
+
 
 
 \end{document}
