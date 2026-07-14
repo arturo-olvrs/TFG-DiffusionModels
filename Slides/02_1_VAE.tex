@@ -99,9 +99,32 @@
     \end{center}\pause
     \begin{figure}
         \centering
-        \includegraphics[width=0.75\textwidth]{Aux/AE_LatentSpace.jpg}
+        \begin{tikzpicture}
+            % 1. Dibujamos la imagen de fondo y definimos la caja de coordenadas (0,0) a (1,1)
+            \node[anchor=south west, inner sep=0] (imagen) at (0,0) {
+                \includegraphics[width=0.75\textwidth]{Aux/AE_LatentSpace.jpg}
+            };
+            \pause
+            
+            % Asociamos el sistema de coordenadas al tamaño de la imagen cargada
+            \begin{scope}[x={(imagen.south east)},y={(imagen.north west)}]
+                
+                \draw[red, ultra thick] (0.2, 0.4) circle (0.05);
+                \node[red, anchor=north, font=\bfseries] at (0.25, 0.35) {Generación correcta};
+                
+                \pause % <--- Aquí pausamos la presentación
+                
+                % ==========================================
+                \draw[yellow, ultra thick] (0.7, 0.2) circle (0.05);
+                \node[yellow, anchor=south, font=\bfseries] at (0.7, 0.25) {Ruido};
+                
+            \end{scope}
+        \end{tikzpicture}
         \caption{Espacio latente de un Autoencoder}
         \label{fig:ae_latent_space}
+
+        \vspace{-1em}
+        {\scriptsize \color{gray} Fuente: \href{https://miro.medium.com/v2/resize:fit:720/format:webp/1*cREKLQrQvLsRgBepw3w3kA.png}{Applying VAEs to MNIST}}
     \end{figure}
 \end{frame}
 
@@ -292,6 +315,40 @@
         \min_{\theta, \phi} \bb{E}_{x\sim q_\theta(z\mid x)}\left[\dfrac{1}{2\sigma^2}\|x - \mu_\phi(z)\|^2\right] + \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))
     \end{equation*}
 \end{frame}
+
+\begin{frame}
+    \frametitle{Problema de los Gaussian VAEs}
+
+    Supuesto un encoder $q_{\text{enc}}(z\mid x)$ gaussiano y \alert{fijo\footnote{Esto no ocurre en la práctica, puesto que el encoder y el decoder se entrenan simultáneamente.}}, la función de pérdida de un Gaussian VAE quedaría:
+    \begin{equation*}
+        \min_{\phi} \bb{E}_{x\sim p_{\text{data}}(x)q_{\text{enc}}(z\mid x)}\left[\|x - \mu_\phi(z)\|^2\right]
+    \end{equation*}\pause
+
+    Esto es un problema de mínimos cuadrados en $\mu_\phi(z)$, con solución óptima:
+    \begin{equation*}
+        \mu_\phi^*(z) = \bb{E}_{z\sim q_{\text{enc}}(x\mid z)}[x] = \dfrac{\bb{E}_{x\sim p_{\text{data}}(x)}[q_{\text{enc}}(z\mid x)\cdot x]}{\bb{E}_{x\sim p_{\text{data}}(x)}[q_{\text{enc}}(z\mid x)]}
+    \end{equation*}
+
+    \pause
+
+    La solución óptima $\mu_\phi^*(z)$ es una media ponderada de todos los datos $x$ (posiblemente no relacionados entre sí) que codifican al mismo vector latente $z$, lo que provoca que la salida del decoder sea borrosa.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Otras variantes de VAEs}
+
+    Los Gaussian VAEs no son la única variante de VAEs. Existen otras variantes que buscan mejorar la calidad de las muestras generadas.
+    \begin{itemize}
+        \item \textbf{Gaussian Encoder and Bernoulli Decoder:} 
+        
+        Permite modelar datos binarios, como imágenes en blanco y negro. Es muy común en la generación de números empleando el MNIST dataset.
+    \end{itemize}\pause
+
+    \begin{exampleblock}{Implementación de un Gaussian VAE y Bernoulli VAE}
+        En \href{https://github.com/arturo-olvrs/VAE-MINST}{este enlace}, se pueden ver la implementación y los resultados de un Gaussian VAE y de un Bernouilli VAE empleando el MNIST dataset.
+    \end{exampleblock}
+\end{frame}
+
 
 
 
