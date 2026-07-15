@@ -20,6 +20,10 @@
 \let\originalhref\href
 \renewcommand{\href}[2]{\originalhref{#1}{\color{blue}\ul{#2}}}
 
+% --- Configuración de bibliografía ---
+\usepackage[backend=biber]{biblatex} % 'style' puede ser numeric, alphabetic, etc.
+\addbibresource{Bibliografia.bib} % Tu archivo de citas (.bib)
+
 
 
 \newcommand{\bb}[1]{\mathbb{#1}}

@@ -81,17 +81,17 @@
         \end{tikzpicture}
         \caption{Esquema de un Autoencoder}
         \label{fig:autoencoder}
-    \end{figure}
 
-    El entrenamiento consiste en minimizar la función de pérdida $\cc{L}(x, x')$ que mide la diferencia entre la entrada $x$ y la salida reconstruida $x'$.\pause
-
+        \vspace{-1em}
+        {\tiny \color{gray} Fuente: Autoría Propia, basado en~\cite{lai2026principlesdiffusionmodels}.}
+    \end{figure}\pause
+    
     Generar nuevas muestras con un autoencoder consiste en muestrear un vector latente $z\in \bb{R}^d$ y decodificarlo.
 \end{frame}
 
 \begin{frame}
     \frametitle{Problema de los Autoencoders}
 
-    \pause
     \begin{center}
         ¡El espacio latente no está estructurado!
         
@@ -124,7 +124,7 @@
         \label{fig:ae_latent_space}
 
         \vspace{-1em}
-        {\scriptsize \color{gray} Fuente: \href{https://miro.medium.com/v2/resize:fit:720/format:webp/1*cREKLQrQvLsRgBepw3w3kA.png}{Applying VAEs to MNIST}}
+        {\tiny \color{gray} Fuente: \href{https://miro.medium.com/v2/resize:fit:720/format:webp/1*cREKLQrQvLsRgBepw3w3kA.png}{Applying VAEs to MNIST}}
     \end{figure}
 \end{frame}
 
@@ -141,7 +141,7 @@
         \end{equation*}\pause
         \item El encoder y el decoder no son funciones deterministas, sino que definen distribuciones de probabilidad condicionadas:
         \begin{equation*}
-            q_\theta(z\mid x) \quad \text{y} \quad p_\phi(x\mid z)
+            q_\theta(z|x) \quad \text{y} \quad p_\phi(x|z)
         \end{equation*}
     \end{itemize}
 \end{frame}
@@ -152,29 +152,46 @@
     Para generar nuevas muestras con un VAE, se sigue el siguiente procedimiento:
     \begin{enumerate}
         \item Muestrear un vector latente $z$ de la distribución prior $p_{\text{prior}}(z)$.\pause
-        \item Decodificar el vector latente $z$ para obtener una distribución de probabilidad sobre los datos $p_\phi(x\mid z)$.\pause
-        \item Muestrear un dato $x$ de la distribución $p_\phi(x\mid z)$.
+        \item Decodificar el vector latente $z$ para obtener una distribución de probabilidad sobre los datos $p_\phi(x|z)$.\pause
+        \item Muestrear un dato $x$ de la distribución $p_\phi(x|z)$.
     \end{enumerate}
 \end{frame}
 
 \begin{frame}
     \frametitle{Encoding de datos con VAEs}
 
-    Para codificar un dato $x$ con un VAE, aplicando la Regla de Bayes, se obtiene la distribución $p_\phi(z\mid x)$:
+    Para codificar un dato $x$ con un VAE, aplicando la Regla de Bayes, se obtiene la distribución $p_\phi(z|x)$:
     \begin{equation*}
-        p_\phi(z\mid x) = \frac{p_\phi(x\mid z)p_{\text{prior}}(z)}{p_\phi(x)}
+        p_\phi(z|x) = \frac{p_\phi(x|z)p_{\text{prior}}(z)}{p_\phi(x)}
         \quad
         \text{donde }
-        p_\phi(x) = \int p_\phi(x\mid z)p_{\text{prior}}(z)\ dz
+        p_\phi(x) = \int p_\phi(x|z)p_{\text{prior}}(z)\ dz
     \end{equation*}\pause
     \begin{center}
-        \alert{El cálculo de $p_\phi(x)$ es intractable, por lo que no se puede calcular $p_\phi(z\mid x)$ directamente.}
+        \alert{El cálculo de $p_\phi(x)$ es intractable, por lo que no se puede calcular $p_\phi(z|x)$ directamente.}
     \end{center}\pause
 
-    El encoder se modela mediante una distribución de probabilidad $q_\theta(z\mid x)$ que aproxima a la distribución posterior $p_\phi(z\mid x)$:
+    El encoder se modela mediante una distribución de probabilidad $q_\theta(z|x)$ que aproxima a la distribución posterior $p_\phi(z|x)$:
     \begin{equation*}
-        q_\theta(z\mid x) \approx p_\phi(z\mid x)
+        q_\theta(z|x) \approx p_\phi(z|x)
     \end{equation*}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Interpolación en el espacio latente}
+
+    Gracias a la estructura probabilística del espacio latente, no se pueden muestrear zonas del espacio latente vacías.\pause
+
+    Como ejemplo de esto, se pueden interpolar vectores latentes para generar nuevas muestras, a diferencia de los autoencoders.
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{Aux/Interpolation_Gaussian.png}
+        \caption{Interpolación en el espacio latente de un VAE}
+        \label{fig:vae_interpolation}
+
+        \vspace{-1em}
+        {\tiny \color{gray} Fuente: Autoría propia, \href{https://github.com/arturo-olvrs/VAE-MINST}{Repositorio VAE-MINST}.}
+    \end{figure}
 \end{frame}
 
 \section{Entrenamiento de VAEs}
@@ -194,15 +211,15 @@
 
     Fijado un dato real $x$, un VAE tiene dos componentes a entrenar:
     \begin{itemize}
-        \item \ul{Reconstrucción de datos:} A partir de $z\sim q_\theta(z\mid x)$, la reconstrucción de $x'$ mediante el decoder $p_\phi(x\mid z)$ debe ser lo más parecida posible a $x$.
+        \item \ul{Reconstrucción de datos:} A partir de $z\sim q_\theta(z|x)$, la reconstrucción de $x'$ mediante el decoder $p_\phi(x|z)$ debe ser lo más parecida posible a $x$.
         
         Se obtiene mediante la MLE de los datos reconstruidos:
         \begin{equation*}
-            \max_{\phi} \bb{E}_{z\sim q_\theta(z\mid x)}[\log p_\phi(x\mid z)]
+            \max_{\phi} \bb{E}_{z\sim q_\theta(z|x)}[\log p_\phi(x|z)]
         \end{equation*}\pause
         \item \ul{Regularización del espacio latente:} Para otorgarle estructura al espacio latente.
         \begin{equation*}
-            \min_{\theta} \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))
+            \min_{\theta} \cc{D}_{\text{KL}}(q_\theta(z|x)\| p_{\text{prior}}(z))
         \end{equation*}
     \end{itemize}
 \end{frame}
@@ -214,8 +231,8 @@
         La \textbf{evidence lower bound} (ELBO) de un dato $x$ es la siguiente función:
         \begin{equation*}
             \cc{L}_{\text{ELBO}}(x; \theta, \phi) = 
-            \underbrace{\bb{E}_{z\sim q_\theta(z\mid x)}[\log p_\phi(x\mid z)]}_{\text{Reconstrucción de datos}} -
-            \underbrace{\cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))}_{\text{Regularización del espacio latente}}
+            \underbrace{\bb{E}_{z\sim q_\theta(z|x)}[\log p_\phi(x|z)]}_{\text{Reconstrucción de datos}} -
+            \underbrace{\cc{D}_{\text{KL}}(q_\theta(z|x)\| p_{\text{prior}}(z))}_{\text{Regularización del espacio latente}}
         \end{equation*}
     \end{definitionblock}\pause
     Aunque no se pueda maximizar directamente la verosimilitud de los datos, se puede maximizar la ELBO, que es un límite inferior de la verosimilitud:
@@ -237,7 +254,7 @@
             \cc{D}_{\text{KL}}(q_\theta(x, z)\| p_\phi(x, z))
             \\
             \text{donde}\\
-            q_\theta(x, z) = p_{\text{data}}(x)q_\theta(z\mid x) \quad \text{y} \quad p_\phi(x, z) = p_{\text{prior}}(z)p_\phi(x\mid z)
+            q_\theta(x, z) = p_{\text{data}}(x)q_\theta(z|x) \quad \text{y} \quad p_\phi(x, z) = p_{\text{prior}}(z)p_\phi(x|z)
         \end{gather*}
     \end{definitionblock}\pause
 
@@ -254,7 +271,7 @@
     \begin{gather*}
         \cc{D}_{\text{KL}}(q_\theta(x, z)\| p_\phi(x, z)) =\\=
         \underbrace{\cc{D}_{\text{KL}}(p_{\text{data}}(x)\| p_\phi(x))}_{\text{Error Real de Modelado}} + 
-        \underbrace{\bb{E}_{x\sim p_{\text{data}}(x)}[\cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_\phi(z\mid x))]}_{\text{Error Medio de Inferencia}}
+        \underbrace{\bb{E}_{x\sim p_{\text{data}}(x)}[\cc{D}_{\text{KL}}(q_\theta(z|x)\| p_\phi(z|x))]}_{\text{Error Medio de Inferencia}}
     \end{gather*}\pause
 
     El segundo término, el \textbf{error de inferencia}, mide la diferencia entre la distribución del espacio latente para un dato $x$, considerándolo tanto codificado como generado.
@@ -265,7 +282,7 @@
 
     La siguiente relación entre el error de inferencia y la ELBO se cumple:
     \begin{equation*}
-        \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_\phi(z\mid x)) = \log p_\phi(x) - \cc{L}_{\text{ELBO}}(x; \theta, \phi)
+        \cc{D}_{\text{KL}}(q_\theta(z|x)\| p_\phi(z|x)) = \log p_\phi(x) - \cc{L}_{\text{ELBO}}(x; \theta, \phi)
     \end{equation*}\pause
 
     Por tanto, maximizar la ELBO es equivalente a minimizar el error de inferencia.
@@ -279,11 +296,11 @@
     En los Gaussian VAEs, el encoder y el decoder se modelan mediante distribuciones normales multivariantes. Sean $D, d\in \bb{N}$ las dimensiones de los datos y del espacio latente, respectivamente.\pause
     Entonces:
     \begin{description}
-        \item[Encoder:] $q_\theta(z\mid x) := \cc{N}(z; \mu_\theta(x), \diag(\sigma_\theta^2(x)))$\\\vspace{0.2cm}
+        \item[Encoder:] $q_\theta(z|x) := \cc{N}(z; \mu_\theta(x), \diag(\sigma_\theta^2(x)))$\\\vspace{0.2cm}
         
         donde $\mu_\theta, \log \sigma_\theta^2: \bb{R}^D \to \bb{R}^d$ son las salidas de la red neuronal del encoder.\pause
 
-        \item[Decoder:] $p_\phi(x\mid z) := \cc{N}(x; \mu_\phi(z), \sigma^2 I)$\\\vspace{0.2cm}
+        \item[Decoder:] $p_\phi(x|z) := \cc{N}(x; \mu_\phi(z), \sigma^2 I)$\\\vspace{0.2cm}
         
         donde $\sigma^2\in \bb{R}^+$ es un hiperparámetro y $\mu_\phi: \bb{R}^d \to \bb{R}^D$ es la salida de la red neuronal del decoder.
     \end{description}
@@ -296,12 +313,12 @@
     \begin{itemize}
         \item Reconstrucción de datos:
         \begin{equation*}
-            \bb{E}_{z\sim q_\theta(z\mid x)}[\log p_\phi(x\mid z)] = -\frac{1}{2\sigma^2}\bb{E}_{z\sim q_\theta(z\mid x)}[\|x - \mu_\phi(z)\|^2] + C
+            \bb{E}_{z\sim q_\theta(z|x)}[\log p_\phi(x|z)] = -\frac{1}{2\sigma^2}\bb{E}_{z\sim q_\theta(z|x)}[\|x - \mu_\phi(z)\|^2] + C
         \end{equation*}
         donde $C$ es una constante que no depende de los parámetros $\theta$ y $\phi$.\pause
         \item Regularización del espacio latente:
         \begin{equation*}
-            \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))
+            \cc{D}_{\text{KL}}(q_\theta(z|x)\| p_{\text{prior}}(z))
         \end{equation*}
         se puede calcular de manera analítica, ya que ambas distribuciones son normales multivariantes.
     \end{itemize}
@@ -312,21 +329,21 @@
 
     Por tanto, maximizar la ELBO de un Gaussian VAE es equivalente a:
     \begin{equation*}
-        \min_{\theta, \phi} \bb{E}_{x\sim q_\theta(z\mid x)}\left[\dfrac{1}{2\sigma^2}\|x - \mu_\phi(z)\|^2\right] + \cc{D}_{\text{KL}}(q_\theta(z\mid x)\| p_{\text{prior}}(z))
+        \min_{\theta, \phi} \bb{E}_{x\sim q_\theta(z|x)}\left[\dfrac{1}{2\sigma^2}\|x - \mu_\phi(z)\|^2\right] + \cc{D}_{\text{KL}}(q_\theta(z|x)\| p_{\text{prior}}(z))
     \end{equation*}
 \end{frame}
 
 \begin{frame}
     \frametitle{Problema de los Gaussian VAEs}
 
-    Supuesto un encoder $q_{\text{enc}}(z\mid x)$ gaussiano y \alert{fijo\footnote{Esto no ocurre en la práctica, puesto que el encoder y el decoder se entrenan simultáneamente.}}, la función de pérdida de un Gaussian VAE quedaría:
+    Supuesto un encoder $q_{\text{enc}}(z|x)$ gaussiano y \alert{fijo\footnote{Esto no ocurre en la práctica, puesto que el encoder y el decoder se entrenan simultáneamente.}}, la función de pérdida de un Gaussian VAE quedaría:
     \begin{equation*}
-        \min_{\phi} \bb{E}_{x\sim p_{\text{data}}(x)q_{\text{enc}}(z\mid x)}\left[\|x - \mu_\phi(z)\|^2\right]
+        \min_{\phi} \bb{E}_{x\sim p_{\text{data}}(x)q_{\text{enc}}(z|x)}\left[\|x - \mu_\phi(z)\|^2\right]
     \end{equation*}\pause
 
     Esto es un problema de mínimos cuadrados en $\mu_\phi(z)$, con solución óptima:
     \begin{equation*}
-        \mu_\phi^*(z) = \bb{E}_{z\sim q_{\text{enc}}(x\mid z)}[x] = \dfrac{\bb{E}_{x\sim p_{\text{data}}(x)}[q_{\text{enc}}(z\mid x)\cdot x]}{\bb{E}_{x\sim p_{\text{data}}(x)}[q_{\text{enc}}(z\mid x)]}
+        \mu_\phi^*(z) = \bb{E}_{z\sim q_{\text{enc}}(x|z)}[x] = \dfrac{\bb{E}_{x\sim p_{\text{data}}(x)}[q_{\text{enc}}(z|x)\cdot x]}{\bb{E}_{x\sim p_{\text{data}}(x)}[q_{\text{enc}}(z|x)]}
     \end{equation*}
 
     \pause
@@ -347,6 +364,109 @@
     \begin{exampleblock}{Implementación de un Gaussian VAE y Bernoulli VAE}
         En \href{https://github.com/arturo-olvrs/VAE-MINST}{este enlace}, se pueden ver la implementación y los resultados de un Gaussian VAE y de un Bernouilli VAE empleando el MNIST dataset.
     \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Problemas de los VAEs}
+
+    \begin{enumerate}
+        \item El modelo elegido supone una gran limitación.
+        
+        Por ejemplo, si $p_{\phi}(z|x)$ es multimodal y hemos optado por un Gaussian Encoder, no podremos aproximarla bien, y no llegaremos a buenos resultados.
+        \pause
+        \item Si el Decoder es muy expresivo, puede terminar decodificando bien sin necesidad de usar la variable latente $z$.
+        
+        Esto provoca que $q_{\theta}(z)=p_{\text{prior}}(z)$, y que perdamos el control sobre la generación de nuevas muestras.
+    \end{enumerate}
+    
+\end{frame}
+
+
+\section{Hierarchical VAEs}
+
+\begin{frame}
+    \frametitle{Hierarchical VAEs}
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[
+            block/.style={
+                draw, 
+                thick, 
+                fill=gray!10,
+                rounded corners=6pt,
+                minimum width=1cm,
+                minimum height=1.5cm,
+                align=center,
+                font=\bfseries
+            },
+            mathlabel/.style={
+                font=\small,
+                inner sep=2pt
+            }
+        ]
+
+            % --- POSICIONAMIENTO DE NODOS PRINCIPALES ---
+            
+            % Nodo de entrada x
+            \node[block] (x) at (0,0) {x};
+            
+            % Capas latentes z_1, z_2, z_L posicionadas secuencialmente a la derecha
+            \node[block] (z1) [right=1.75cm of x] {z$_1$};
+            \node[block] (z2) [right=1.75cm of z1] {z$_2$};
+            
+            % Nodo fantasma para elipsis (...)
+            \node[right=1.2cm of z2, scale=1.5] (ellipsis) {\dots};
+            
+            % Última capa latente z_L, posicionada a la derecha de la elipsis
+            \node[block] (zL) [right=1.2cm of ellipsis] {z$_L$};
+
+            % --- DIBUJO DE CONEXIONES (Flechas) ---
+            
+            % --- Conexiones x <-> z1 ---
+            % Flecha superior (Dirección de Inferencia/Reconocimiento q_theta)
+            \draw[-Stealth, thick] ([yshift=0.35cm]x.east) -- ([yshift=0.35cm]z1.west)
+                node[midway, above, mathlabel] {$q_\theta({z}_1|{x})$};
+            % Flecha inferior (Dirección Generativa p_phi)
+            \draw[-Stealth, thick] ([yshift=-0.35cm]z1.west) -- ([yshift=-0.35cm]x.east)
+                node[midway, below, mathlabel] {$p_\phi({x}|{z}_1)$};
+
+            % --- Conexiones z1 <-> z2 ---
+            \draw[-Stealth, thick] ([yshift=0.35cm]z1.east) -- ([yshift=0.35cm]z2.west)
+                node[midway, above, mathlabel] {$q_\theta({z}_2|{z}_1)$};
+            \draw[-Stealth, thick] ([yshift=-0.35cm]z2.west) -- ([yshift=-0.35cm]z1.east)
+                node[midway, below, mathlabel] {$p_\phi({z}_1|{z}_2)$};
+
+            % --- Conexiones z2 <-> elipsis (...) ---
+            % Flechas cortas que apuntan hacia y desde la elipsis
+            \draw[-Stealth, thick] ([yshift=0.35cm]z2.east) -- ([yshift=0.35cm]ellipsis.west);
+            \draw[-Stealth, thick] ([yshift=-0.35cm]ellipsis.west) -- ([yshift=-0.35cm]z2.east);
+
+            % --- Conexiones elipsis <-> zL ---
+            % Flechas cortas desde/hacia la elipsis hasta zL, con las etiquetas finales
+            \draw[-Stealth, thick] ([yshift=0.35cm]ellipsis.east) -- ([yshift=0.35cm]zL.west)
+                node[midway, above, mathlabel, xshift=-0.4cm] {$q_\theta({z}_L|{z}_{L-1})$};
+            \draw[-Stealth, thick] ([yshift=-0.35cm]zL.west) -- ([yshift=-0.35cm]ellipsis.east)
+                node[midway, below, mathlabel, xshift=-0.4cm] {$p_\phi({z}_{L-1}|{z}_L)$};
+
+        \end{tikzpicture}
+        \caption{Esquema de un Hierarchical VAE}
+        \label{fig:hierarchical_vae}
+        \vspace{-1em}
+        {\tiny \color{gray} Fuente: Autoría Propia, basado en~\cite{lai2026principlesdiffusionmodels}.}
+    \end{figure}
+
+    Se emplean varias capas latentes $z_1, z_2, \dots, z_L$ para modelar la distribución de los datos.\pause Tienen dos principales problemas:
+    \begin{enumerate}
+        \item El entrenamiento se vuelve inestable, ya que el error se propaga a través de todas las capas latentes.\pause
+        \item Las capas más profundas tienden a ser ignoradas, ya que las capas más superficiales pueden modelar la distribución de los datos por sí solas.
+    \end{enumerate}
+\end{frame}
+
+
+
+
+\begin{frame}[allowframebreaks]{Bibliografía}
+    \nocite{lai2026principlesdiffusionmodels}
+    \printbibliography
 \end{frame}
 
 
