@@ -1,0 +1,2 @@
+- ¿Qué es la verosimilitud? ¿Es siempre sinónimo de probabilidad? ¿p(x), p(x|z)?
+- Qué es la distribución a posteriori? ¿Es la que se deduce de la Regla de Bayes? ¿Es decir, dado p(x|z), deducir p(z|x)?
