@@ -1,0 +1,26 @@
+\documentclass[12pt]{article}
+\input{/home/arturoolvrs/Desktop/LosDelDGIIM.github.io/subjects/_assets/preambulo.tex}
+
+\renewcommand{\thedefinicion}{%
+  \ifnum\value{section}=0 % Si no se ha iniciado ninguna sección
+    \arabic{definicion}% Solo mostrar el número de ejercicio
+  \else
+    \thesection.\arabic{definicion}% Mostrar número de sección y número de ejercicio
+  \fi
+}
+
+\author{Arturo Olivares Martos}
+\title{Demostración de la no negatividad de la divergencia KL}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\begin{definicion}
+Dadas dos funciones de densidad de probabilidad $p(x)$ y $q(x)$ definidas sobre un mismo espacio de probabilidad, la divergencia de Kullback-Leibler (KL) de $q$ respecto a $p$ se define como:
+\begin{equation}
+\mathcal{D}_{\text{KL}}(p||q) = \int p(x) \log\left(\frac{p(x)}{q(x)}\right) dx
+\end{equation}
+\end{definicion}
+
+\end{document}
