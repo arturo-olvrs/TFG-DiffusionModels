@@ -1,13 +1,6 @@
 \documentclass[12pt]{article}
 \input{/home/arturoolvrs/Desktop/LosDelDGIIM.github.io/subjects/_assets/preambulo.tex}
 
-\renewcommand{\thedefinicion}{%
-  \ifnum\value{section}=0 % Si no se ha iniciado ninguna sección
-    \arabic{definicion}% Solo mostrar el número de ejercicio
-  \else
-    \thesection.\arabic{definicion}% Mostrar número de sección y número de ejercicio
-  \fi
-}
 
 \author{Arturo Olivares Martos}
 \title{Demostración de la no negatividad de la divergencia KL}
@@ -17,10 +10,67 @@
 
 \maketitle
 \begin{definicion}
-Dadas dos funciones de densidad de probabilidad $p(x)$ y $q(x)$ definidas sobre un mismo espacio de probabilidad, la divergencia de Kullback-Leibler (KL) de $q$ respecto a $p$ se define como:
+Dadas dos funciones de densidad de probabilidad $p(x)$ y $q(x)$ definidas sobre un mismo espacio de probabilidad, donde $p(x),q(x)>0$ para todo $x$, la divergencia de Kullback-Leibler (KL) de $q$ respecto a $p$ se define como:
 \begin{equation}
-\mathcal{D}_{\text{KL}}(p||q) = \int p(x) \log\left(\frac{p(x)}{q(x)}\right) dx
+\mathcal{D}_{\text{KL}}(p||q) = \int p(x) \log\left(\frac{p(x)}{q(x)}\right) dx = \bb{E}_p\left[\log\left(\frac{p(X)}{q(X)}\right)\right]
 \end{equation}
 \end{definicion}
+
+Nuestro objetivo es demostrar que la divergencia KL es siempre no negativa, es decir, $\mathcal{D}_{\text{KL}}(p||q) \geq 0$ para todas las funciones de densidad de probabilidad $p$ y $q$. Para ello, hemos de demostrar en primer lugar la desigualdad de Jensen.
+\begin{teo}[Desigualdad de Jensen]
+Sea $X$ una variable aleatoria y $f: \mathbb{R} \to \mathbb{R}$ una función convexa. Entonces:
+\begin{equation}
+\mathbb{E}[f(X)]\geq f(\mathbb{E}[X])
+\end{equation}
+\end{teo}
+\begin{proof}
+Sea $X$ una variable aleatoria y $f$ una función convexa. Por definición de convexidad, fijado $x_0\in \bb{R}$, existe una constante $c\in \bb{R}$ con:
+\begin{equation*}
+f(x) \geq f(x_0) + c(x - x_0)\qquad \forall x \in \bb{R}
+\end{equation*}
+
+Evaluamos la desigualdad anterior tomando $x_0=\bb{E}[X]$, por lo que $\exists c\in \bb{R}$ tal que:
+\begin{equation*}
+  f(x) \geq f(\bb{E}[X]) + c(x - \bb{E}[X])\qquad \forall x \in \bb{R}
+\end{equation*}
+
+Tomamos ahora la esperanza de ambos lados de la desigualdad y, tras aplicar la linealidad de la esperanza, obtenemos:
+\begin{equation*}
+\bb{E}[f(X)] \geq \mathbb{E}\left[f(\bb{E}[X]) + c(X - \bb{E}[X])\right] = f(\bb{E}[X]) + c(\mathbb{E}[X] - \mathbb{E}[X]) = f(\bb{E}[X])
+\end{equation*}
+\end{proof}
+
+Una vez demostrada la desigualdad de Jensen, podemos proceder a demostrar la no negatividad de la divergencia KL.
+\begin{teo}[No negatividad de la divergencia KL]
+Sea $p(x)$ y $q(x)$ dos funciones de densidad de probabilidad definidas sobre un mismo espacio de probabilidad. Entonces:
+\begin{equation}
+\mathcal{D}_{\text{KL}}(p||q) \geq 0
+\end{equation}
+\end{teo}
+\begin{proof}
+Puesto que el logaritmo no es una función convexa, consideremos la función $f(x) = -\log(x)$, que sí lo es en $\bb{R}^+$. Entonces, podemos reescribir la divergencia KL como:
+\begin{equation*}
+\mathcal{D}_{\text{KL}}(p||q) = \bb{E}_p\left[\log\left(\frac{p(X)}{q(X)}\right)\right] = \bb{E}_p\left[-\log\left(\frac{q(X)}{p(X)}\right)\right]
+\end{equation*}
+
+Puesto que $p(x)$ y $q(x)$ son funciones de densidad de probabilidad y no se anulan, tenemos que:
+\begin{equation*}
+  \dfrac{q(x)}{p(x)} > 0 \quad \forall x\in \bb{R}
+\end{equation*}
+
+Por tanto, podemos aplicar la desigualdad de Jensen a la variable aleatoria $\nicefrac{q(X)}{p(X)}$ y a la función convexa $f(x) = -\log(x)$:
+\begin{equation*}
+\mathcal{D}_{\text{KL}}(p||q) = \bb{E}_p\left[-\log\left(\frac{q(X)}{p(X)}\right)\right] \geq -\log\left(\bb{E}_p\left[\frac{q(X)}{p(X)}\right]\right)
+\end{equation*}
+
+Calculemos ahora la esperanza de $\nicefrac{q(X)}{p(X)}$ bajo la distribución $p$:
+\begin{equation*}
+\bb{E}_p\left[\frac{q(X)}{p(X)}\right] = \int_{\bb{R}} p(x) \frac{q(x)}{p(x)} dx = \int_{\bb{R}} q(x) dx \AstIg 1
+\end{equation*}
+donde en $(\ast)$ hemos utilizado el hecho de que $q(x)$ es una función de densidad de probabilidad, por lo que su integral sobre todo el espacio es igual a 1. Por tanto, tenemos que:
+\begin{equation*}
+\mathcal{D}_{\text{KL}}(p||q) \geq -\log(1) = 0
+\end{equation*}
+\end{proof}
 
 \end{document}
