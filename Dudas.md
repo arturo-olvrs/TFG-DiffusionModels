@@ -24,3 +24,17 @@ Sobre PPCA, he visto que es un paso intermedio entre PCA y un VAE, puesto que el
 2. **Mediante la ecuación de máxima verosimilitud**, que es un método directo por el que se obtienen los parámetros de la distribución latente que maximizan la probabilidad de los datos observados.
 
     Este método, aunque explicado ne el PDF que me ha pasado Rafa, he entendido que no era el objetivo del ejercicio, por lo que no he profundizado en por qué se llegan a esos resultados. Tan solo los he empleado para comprobar que los resultados obtenidos mediante el método de Inferencia Variacional eran correctos.
+
+
+### Ejercicio 2. Demostrar que la divergencia KL es no negativa
+
+Sin problema, lo he podido demostrar bien.
+
+### Ejercicio 3. Probar con distintos estimadores de la log-likelihood
+
+En el repositorio del MNIST (disponible [aquí](https://github.com/arturo-olvrs/VAE-MNIST)), he añadido la última gráfica que se puede ver abajo. En el notebook en sí, abajo del todo, se explican en detalle los 4 métodos que he empleado para estimar la log-likelihood.
+
+Una pregunta que me surge es:
+- Si decidimos aproximar la log-likelihood mediante Importance Sampling, podemos olvidarnos de $q(z|x)$ y emplear directamente $p(z|x)$, no? Aunque sea más lento, ¿no generaría mejores resultados? 
+    - Sin programarlo, pienso que no. Para poder obtener $p(x)$ mediante Importance Sampling, necesitamos muestrear de $q(z|x)$ (que en nuestro caso reemplazaríamos por $p(z|x)$). Pero para obtener $p(z|x)$ necesitamos obtener $p(x)$. Por tanto, se requieren mutuamente. No podemos prescindir de $q(z|x)$.
+    - Se me ocurre que podríamos emplear mi segundo método ($z\sim p_{prior}(z)$) para obtener $p(x)$. No obstante, tardaría mucho mucho más, puesto que requiere una gran cantidad de muestras para que la estimación sea buena.
