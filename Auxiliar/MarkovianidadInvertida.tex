@@ -1,0 +1,103 @@
+\documentclass[12pt]{article}
+\input{/home/arturoolvrs/Desktop/LosDelDGIIM.github.io/subjects/_assets/preambulo.tex}
+
+\author{Arturo Olivares Martos}
+\title{Markovianidad del proceso inverso}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{definicion}[Cadena de Markov]
+Sea $X_1, X_2, \ldots$ una secuencia de variables aleatorias discretas. Decimos que esta secuencia es una \textbf{cadena de Markov} si para todo $n \in \mathbb{N}$ y para cualesquiera $x_1, \ldots, x_n, x_{n+1} \in \mathcal{X}$ tales que $P[X_1 = x_1, \ldots, X_n = x_n] > 0$, se cumple que
+\begin{equation*}
+P[X_{n+1} = x_{n+1} \mid X_1 = x_1, \ldots, X_n = x_n] = P[X_{n+1} = x_{n+1} \mid X_n = x_n].
+\end{equation*}
+\end{definicion}
+
+\begin{prop}[Caracterización por factorización]
+  Sea $X_1, X_2, \ldots$ una secuencia de variables aleatorias. Las siguientes afirmaciones son equivalentes:
+  \begin{enumerate}
+    \item La secuencia $X_1, X_2, \ldots$ es una cadena de Markov.
+    \item Para todo $n \in \mathbb{N}$ y para cualesquiera $x_1, \ldots, x_n \in \mathcal{X}$ se cumple que
+    \begin{equation*}
+      P[X_1 = x_1, \ldots, X_n = x_n] = P[X_1 = x_1] \prod_{i=2}^{n} P[X_i = x_i \mid X_{i-1} = x_{i-1}].
+    \end{equation*}
+  \end{enumerate}
+\end{prop}
+\begin{proof}~
+  \begin{description}
+    \item[$(1) \Longrightarrow (2)$] Supongamos que $X_1, X_2, \ldots$ es una cadena de Markov. Procedemos por inducción sobre $n \ge 2$:
+    \begin{itemize}
+      \item \ul{Caso base ($n=2$):} Por la definición de probabilidad condicional:
+      \begin{equation*}
+        P[X_1 = x_1, X_2 = x_2] = P[X_1 = x_1] P[X_2 = x_2 \mid X_1 = x_1]
+      \end{equation*}
+      
+      \item \ul{Paso inductivo:} Supongamos cierta la igualdad para $n=k \ge 2$, es decir,
+      \begin{equation*}
+        P[X_1 = x_1, \ldots, X_k = x_k] = P[X_1 = x_1] \prod_{i=2}^{k} P[X_i = x_i \mid X_{i-1} = x_{i-1}].
+      \end{equation*}
+      Para $n=k+1$, aplicando la definición de probabilidad condicional:
+      \begin{align*}
+        &P[X_1 = x_1, \ldots, X_{k+1} = x_{k+1}]\\
+        &= P[X_1 = x_1, \ldots, X_k = x_k] P[X_{k+1} = x_{k+1} \mid X_1 = x_1, \ldots, X_k = x_k] \\
+        &\stackrel{(\ast)}{=} P[X_1 = x_1, \ldots, X_k = x_k] P[X_{k+1} = x_{k+1} \mid X_k = x_k] \\
+        &\stackrel{(\ast\ast)}{=} P[X_1 = x_1] \left(\prod_{i=2}^{k} P[X_i = x_i \mid X_{i-1} = x_{i-1}]\right) P[X_{k+1} = x_{k+1} \mid X_k = x_k] \\
+        &= P[X_1 = x_1] \prod_{i=2}^{k+1} P[X_i = x_i \mid X_{i-1} = x_{i-1}],
+      \end{align*}
+      donde en $(\ast)$ se utiliza la propiedad de Markov y en $(\ast\ast)$ la hipótesis inductiva.
+    \end{itemize}
+
+    \item[$(2) \Longrightarrow (1)$] Supongamos que la conjunta factoriza para todo $n$. Entonces:
+    \begin{align*}
+      &P[X_{n+1} = x_{n+1} \mid X_1 = x_1, \ldots, X_n = x_n] \\
+      &= \frac{P[X_1 = x_1, \ldots, X_{n+1} = x_{n+1}]}{P[X_1 = x_1, \ldots, X_n = x_n]} \\
+      &= \frac{P[X_1 = x_1] \left(\prod\limits_{i=2}^{n} P[X_i = x_i \mid X_{i-1} = x_{i-1}]\right) P[X_{n+1} = x_{n+1} \mid X_n = x_n]}{P[X_1 = x_1] \prod\limits_{i=2}^{n} P[X_i = x_i \mid X_{i-1} = x_{i-1}]} \\
+      &= P[X_{n+1} = x_{n+1} \mid X_n = x_n].
+    \end{align*}
+  \end{description}
+\end{proof}
+
+\begin{teo}[Markovianidad de la secuencia invertida]
+  Sea $(X_1, X_2, \ldots, X_N)$ una secuencia finita de variables aleatorias que forma una cadena de Markov. Fijado un instante $k \in \{2, \ldots, N-1\}$, para cualesquiera valores $x_{k-1}, x_k, \ldots, x_N$ tales que $P[X_k = x_k, \ldots, X_N = x_N] > 0$, se cumple que
+  \begin{equation*}
+  P[X_{k-1} = x_{k-1} \mid X_k = x_k, X_{k+1} = x_{k+1}, \ldots, X_N = x_N] = P[X_{k-1} = x_{k-1} \mid X_k = x_k].
+  \end{equation*}
+  Por consiguiente, la secuencia indexada en orden decreciente $(X_N, X_{N-1}, \ldots, X_1)$ es también una cadena de Markov.
+\end{teo}
+\begin{proof}
+  Por definición de probabilidad condicional:
+  \begin{equation*}
+  P[X_{k-1} = x_{k-1} \mid X_k = x_k, \ldots, X_N = x_N] = \frac{P[X_{k-1} = x_{k-1}, X_k = x_k, \ldots, X_N = x_N]}{P[X_k = x_k, \ldots, X_N = x_N]}.
+  \end{equation*}
+  Analicemos el numerador marginalizando respecto de las variables precedentes $X_1, \ldots, X_{k-2}$:
+  \begin{align*}
+    &P[X_{k-1} = x_{k-1}, \ldots, X_N = x_N] \\
+    &= \sum_{x_1, \ldots, x_{k-2}} P[X_1 = x_1, \ldots, X_N = x_N] \\
+    &= \sum_{x_1, \ldots, x_{k-2}} \left( P[X_1 = x_1] \prod_{i=2}^{k-1} P[X_i = x_i \mid X_{i-1} = x_{i-1}] \right) \prod_{j=k}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}] \\
+    &= \left( \prod_{j=k}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}] \right) \sum_{x_1, \ldots, x_{k-2}} P[X_1 = x_1, \ldots, X_{k-1} = x_{k-1}] \\
+    &= P[X_{k-1} = x_{k-1}] \prod_{j=k}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}].
+  \end{align*}
+  Empleando ahora lo obtenido en el numerador, marginalizamos respecto de $X_{k-1}$ para obtener el denominador:
+  \begin{align*}
+    &P[X_k = x_k, \ldots, X_N = x_N]
+    = \sum_{x_{k-1}} P[X_{k-1} = x_{k-1}, \ldots, X_N = x_N] \\
+    &= \sum_{x_{k-1}} P[X_{k-1} = x_{k-1}] \prod_{j=k}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}] \\
+    &= \left( \prod_{j=k+1}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}] \right) \sum_{x_{k-1}} P[X_{k-1} = x_{k-1}] P[X_k = x_k \mid X_{k-1} = x_{k-1}] \\
+    &= \left( \prod_{j=k+1}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}] \right) \sum_{x_{k-1}} P[X_k = x_k, X_{k-1} = x_{k-1}] \\
+    &= P[X_k = x_k] \prod_{j=k+1}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}].
+  \end{align*}
+  Sustituyendo numerador y denominador en el cociente original:
+  \begin{align*}
+    &P[X_{k-1} = x_{k-1} \mid X_k = x_k, \ldots, X_N = x_N] \\
+    &= \frac{P[X_{k-1} = x_{k-1}] P[X_k = x_k \mid X_{k-1} = x_{k-1}] \prod\limits_{j=k+1}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}]}{P[X_k = x_k] \prod\limits_{j=k+1}^{N} P[X_j = x_j \mid X_{j-1} = x_{j-1}]} \\
+    &= \frac{P[X_{k-1} = x_{k-1}] P[X_k = x_k \mid X_{k-1} = x_{k-1}]}{P[X_k = x_k]} \\
+    &= P[X_{k-1} = x_{k-1} \mid X_k = x_k],
+  \end{align*}
+  lo que concluye la demostración.
+\end{proof}
+
+Notemos que todo lo anterior también es válido para cadenas de Markov continuas, con la salvedad de que las probabilidades se sustituyen por densidades de probabilidad.
+\end{document}
