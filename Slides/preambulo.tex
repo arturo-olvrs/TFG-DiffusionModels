@@ -50,3 +50,23 @@
     \tableofcontents[currentsection]
   \end{frame}
 }
+
+
+% Declarar aplicaciones
+% 1. Nombre aplicación
+% 2. Dominio
+% 3. Codominio
+% 4. Variable
+% 5. Imagen de la variable
+\newcommand{\Func}[5]{
+    \begin{equation*}
+        \begin{array}{rrll}
+            \displaystyle #1:& \displaystyle  #2 & \longrightarrow & \displaystyle  #3\\
+               & \displaystyle  #4 & \longmapsto & \displaystyle  #5
+        \end{array}
+    \end{equation*}
+}
+\DeclareMathOperator{\tr}{Tr}
+
+
+\usepackage[makeroom]{cancel}
