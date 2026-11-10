@@ -2,7 +2,9 @@
 \input{preambulo}
 
 
-\title[3.1. EBM]{Capítulo 3.1. Energy-Based Models}
+
+
+\title[3.1y2. EBM y SBM]{Capítulo 3.1. y 3.2:\\Energy-Based Models \& Score-Based Models}
 \subtitle{Trabajo de Fin de Grado}
 \author[Arturo]{Arturo Olivares Martos}
 \institute[DGIIM - UGR]{Doble Grado en Ingeniería Informática y Matemáticas\\Universidad de Granada}
@@ -18,8 +20,8 @@
     \titlepage
 \end{frame}
 
-\section{Score}
-\begin{frame}{Introducción}
+\section{Energy-Based Models}
+\begin{frame}{Energy-Based Models}
 
     Dado un conjunto de datos $\mathcal{D} = \{x_1, x_2, \ldots, x_N\}\subset \bb{R}^D$, entrenar directamente $p_\phi:\bb{R}^D:\bb{R}^+_0$ función de densidad no es sencillo. Por tanto, se emplea una \emph{función de energía} $E_\phi:\bb{R}^D\to \bb{R}$, que asigna valores bajos de energía a datos reales, y valores altos a datos irreales.
 
@@ -42,6 +44,7 @@
     \end{center}
 \end{frame}
 
+\section{Función de Score}
 \begin{frame}{Solución: Función de Score}
     \begin{definitionblock}{Función de Score}
         Sea $p:\bb{R}^D\to \bb{R}^+_0$ una función de densidad. La función de score de $p$ es:
@@ -78,7 +81,6 @@
     \end{itemize}
 \end{frame}
 
-\section{Entrenamiento usando Score}
 \begin{frame}{Entrenamiento de un EBM usando Score Matching}
     En vez de minimizar $\cc{D}_\text{KL}(p_\text{data}\|p_\phi)$, se minimiza\footnote{No se llegará al mismo resultado} $\cc{D}_\text{F}(p_\text{data}\|p_\phi)$:
     \begin{align*}
@@ -99,7 +101,7 @@
     \begin{definitionblock}{Langevin Sampling en Tiempo Discreto}
         Sea $p:\bb{R}^D\to \bb{R}^+_0$ una función de densidad. El proceso de Langevin en tiempo discreto con paso $\eta>0$ es:
         \begin{equation*}
-            x_{n+1} = x_n + \eta \nabla_x \log p(x_n) + \sqrt{2\eta}\ \epsilon_n, \quad \epsilon_n\sim \cc{N}(0, I)
+            x_{n+1} = x_n + \eta \nabla_x \log p(x_n) + \sqrt{2\eta}\ \epsilon_n, \quad \epsilon_n\sim \cc{N}(0, \mathbf{I})
         \end{equation*}
     \end{definitionblock}
     
@@ -108,7 +110,7 @@
     La función de score guía el proceso de Langevin hacia regiones de alta probabilidad, mientras que el término de ruido $\sqrt{2\eta}\ \epsilon_n$ permite escapar de mínimos locales.\pause
 
     \begin{equation*}
-        x_{n+1} = x_n - \eta \nabla_x E_\phi(x_n) + \sqrt{2\eta}\ \epsilon_n, \quad \epsilon_n\sim \cc{N}(0, I)
+        x_{n+1} = x_n - \eta \nabla_x E_\phi(x_n) + \sqrt{2\eta}\ \epsilon_n, \quad \epsilon_n\sim \cc{N}(0, \mathbf{I})
     \end{equation*}
     
 \end{frame}
@@ -140,7 +142,7 @@
     \end{center}
 \end{frame}
 
-\section{De EB a Score-Based Models}
+\section{Score-Based Models}
 \begin{frame}{Motivación de Score-Based Models}
     Si al muestrear tan solo se necesita la función de score, ¿por qué no entrenar directamente un modelo para aproximar la función de score de los datos, olvidando la función de energía? \pause
     \begin{equation*}
@@ -167,6 +169,32 @@
         Si es definida negativa, entonces todos los autovalores de $\nabla_x^2 \log p_\text{data}(x^*)$ son negativos, y por tanto $\tr(\nabla_x^2 \log p_\text{data}(x^*)) < 0$. Por tanto, minimizar $\tr(\nabla_x s_\phi(x))$ fomenta que sea definida negativa, \emph{aunque no garantiza que lo sea (podría tener autovalores positivos aunque la suma de los autovalores sea negativa)}.
 
     \end{itemize}
+\end{frame}
+
+
+\section{Sliced SM}
+\begin{frame}{Sliced Score Matching}
+    Calcular $\tr(\nabla_x s_\phi(x))$ tiene coste $\cc{O}(D)$, lo que es ineficiente para $D$ grande. \pause
+    \begin{proposition}[Identidad de Hutchinson]
+        Sean $A\in \cc{M}_{D\times D}(\bb{R})$ y $s\in \bb{R}^D$ fijos. Sea $u\in \bb{R}^D$ un vector aleatorio con $\bb{E}[u]=0$ y $\bb{E}[uu^t] = \mathbf{I}$. Entonces:
+        \begin{equation*}
+            \bb{E}[u^t A u] = \tr(A)\qquad \bb{E}\left[\left(u^ts\right)^2\right] = s^t s = \|s\|_2^2
+        \end{equation*}\pause
+    \end{proposition}
+    Por ejemplo, $u\rightsquigarrow \cc{N}(0, \mathbf{I})$ o $u\rightsquigarrow \text{Rademacher}^D$.
+\end{frame}
+
+\begin{frame}{Sliced Score Matching}
+    \begin{equation*}
+        \cc{L}_\text{SSM}(\phi) = \cc{L}_\text{SM}(\phi) = \bb{E}_{x\sim p_\text{data}, u}\left[u^t\left(\nabla_x s_\phi(x)\right) u + \frac{1}{2}\left(u^ts_\phi(x)\right)^2\right]
+    \end{equation*}
+
+    \pause
+    Se usa JVP/VJP y la media muestral ($K$ muestras) como estimador insesgado con varianza $\cc{O}\left(\nicefrac{1}{K}\right)$, se obtiene un coste $\cc{O}(K)$, que es mucho menor que $\cc{O}(D)$ para $K\ll D$.\pause\vspace{0.5cm}
+    
+    {\color{red} ¿Sliced?} Cada $u$ es una dirección aleatoria, y se proyecta el score en esa dirección. Se repite $K$ veces y se promedia.\pause\vspace{0.5cm}
+
+    En la práctica, $K=1$ y se deja que el minibatch haga el promedio.
 \end{frame}
 
 

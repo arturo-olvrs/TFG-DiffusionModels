@@ -1,0 +1,155 @@
+\documentclass{beamer}
+\input{preambulo}
+
+
+
+
+
+
+\title[3.3. DSM]{Capítulo 3.3:\\Denoising Score Matching}
+\subtitle{Trabajo de Fin de Grado}
+\author[Arturo]{Arturo Olivares Martos}
+\institute[DGIIM - UGR]{Doble Grado en Ingeniería Informática y Matemáticas\\Universidad de Granada}
+\date{\today}
+\logo{\includegraphics[height=1cm]{Aux/UGR-Logo.png}}
+
+
+
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\section{Introducción}
+\begin{frame}{Motivación}
+    
+    El Sliced Score Matching (SSM) está bien, pero...
+    \begin{itemize}
+        \item Normalmente, $p_{\text{data}}$ es nula en la mayoría de los puntos del espacio. Al calcular $\nabla_{x}\log p_{\text{data}}(x)$, nos encontramos con que la mayoría de los puntos no tienen información útil: no está definido, o es inestable.\pause
+        
+        En el muestreo de Langevin, ¡¡no sabemos hacia dónde movernos!!\pause
+        \item JVP y VJP, aunque evitan calcular $D$ derivadas parciales, siguen siendo costosos computacionalmente e inducen errores de aproximación.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Solución: Inyección de ruido}
+    En vez de aproximar $s_{\text{data}}(x)$, aproximamos $s_{\tilde{p}}(x)$, donde $\tilde{p}(x)$ es una versión modificada de $p_{\text{data}}(x)$. \pause
+    \begin{itemize}
+        \item Fijado un nivel de ruido $\sigma$, inyectamos ruido a los datos empleando $p_{\sigma}(\tilde{x}|x)$.\pause
+        \item El modelo $s_{\phi}(\wt{x},\sigma)$ aproxima $s_{p_\sigma}(\tilde{x})$, el score de la marginal de los datos ruidosos:
+        \begin{equation*}
+            p_\sigma(\tilde{x}) = \int_{\mathbb{R}^D} p_{\sigma}(\tilde{x}|x)p_{\text{data}}(x)dx
+        \end{equation*}\pause
+        \item Si $\sigma\approx 0$, $p_\sigma(\tilde{x})\approx p_{\text{data}}(x)$ y $s_{p_\sigma}(\tilde{x})\approx s_{\text{data}}(x)$. Por tanto, podremos emplearlo para generar muestras de $p_{\text{data}}(x)$ mediante muestreo de Langevin.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Ventajas de la inyección de ruido}
+    $p_\sigma(\tilde{x})$ es una versión suavizada de $p_{\text{data}}(x)$. Si $p_{\sigma}(\tilde{x}|x)=\cc{N}(\tilde{x};x,\sigma^2\mathbf{I})$, entonces:
+    \begin{equation*}
+        p_\sigma = p_{\text{data}} * \cc{N}(0,\sigma^2\mathbf{I})
+    \end{equation*}\pause
+    \begin{itemize}
+        \item $p_\sigma(\tilde{x})$ es más estable y está definido en todo el espacio, por lo que $s_{p_\sigma}(\tilde{x})$ también lo está.\pause
+        \item Mayor cobertura del espacio de datos, pues es más sencillo para el muestreo de Langevin moverse entre regiones de alta densidad de $p_\sigma(\tilde{x})$.
+    \end{itemize}    
+\end{frame}
+
+\begin{frame}{Efectos de la elección de $\sigma$}
+    Trade-off entre estabilidad y precisión:\pause
+    \begin{itemize}
+        \item Si $\sigma$ es demasiado grande, $p_\sigma(\tilde{x})$ es demasiado suave y no se parece a $p_{\text{data}}(x)$.
+        
+        Es útil para explorar el espacio de datos, pero tan solo aporta estructuras globales de $p_{\text{data}}(x)$.\pause
+        \item Si $\sigma$ es demasiado pequeño, $p_\sigma(\tilde{x})$ se parece a $p_{\text{data}}(x)$, pero es inestable y no está definido en todo el espacio.
+        
+        Proporciona información más detallada sobre la estructura de los datos, pero puede ser difícil de usar en la práctica.
+    \end{itemize}\pause
+
+    \begin{center}
+        ¿Necesitamos un único nivel de ruido $\sigma$? \pause {\color{green!50!black} ¡No!}\pause\\
+        Pero esos serán los NCSN, tranquilidad...
+    \end{center}
+\end{frame}
+
+
+\section{Entrenamiento}
+
+\begin{frame}{Entrenamiento}
+    \begin{equation*}
+        \cc{L}_{\text{SM}}(\phi,\sigma) := \frac{1}{2}\bb{E}_{\tilde{x}\sim p_\sigma(\tilde{x})}[\|s_\phi(\tilde{x},\sigma) - s_{p_\sigma}(\tilde{x})\|_2^2]
+    \end{equation*}\pause\vspace{-0.8cm}
+    \begin{center}
+        {\color{red} ¡Intractable!}
+    \end{center}
+    \pause
+    \begin{theorem}[Equivalencia entre $\cc{L}_\text{DSM}$ y $\cc{L}_\text{SM}$]
+        Fijado un nivel de ruido $\sigma$, se cumple que:
+        \begin{align*}
+            \cc{L}_\text{SM}(\phi,\sigma) &= \cc{L}_\text{DSM}(\phi,\sigma) + C_\sigma\\
+            \cc{L}_\text{DSM}(\phi,\sigma) :&= \frac{1}{2}\bb{E}_{x\sim p_{\text{data}}(x), \tilde{x}\sim p_\sigma(\tilde{x}|x)}[\|s_\phi(\tilde{x},\sigma) - s_{p_\sigma}(\tilde{x}|x)\|_2^2]
+        \end{align*}\pause
+        El valor óptimo es:
+        \begin{equation*}
+            s_\phi^*(\tilde{x},\sigma) = s_{p_\sigma}(\tilde{x}) = \nabla_{\tilde{x}}\log p_\sigma(\tilde{x})
+        \end{equation*}
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{Ejemplo: $p_\sigma(\tilde{x}|x) = \cc{N}(\tilde{x};x,\sigma^2\mathbf{I})$}
+
+    Un caso muy común es el de inyectar ruido gaussiano isotrópico a los datos:
+    \begin{equation*}
+        \wt{x} = x + \sigma \epsilon, \quad \epsilon \sim \cc{N}(0,\mathbf{I})
+    \end{equation*}\pause
+    \begin{equation*}
+        s_{p_\sigma}(\tilde{x}|x) = \nabla_{\tilde{x}}\log p_\sigma(\tilde{x}|x) = \frac{x-\tilde{x}}{\sigma^2}
+    \end{equation*} \pause
+    \begin{align*}
+        \cc{L}_\text{DSM}(\phi,\sigma) &= \frac{1}{2}\bb{E}_{x\sim p_{\text{data}}(x), \tilde{x}\sim p_\sigma(\tilde{x}|x)}[\|s_\phi(\tilde{x},\sigma) - s_{p_\sigma}(\tilde{x}|x)\|_2^2] \\
+        &= \frac{1}{2}\bb{E}_{x\sim p_{\text{data}}(x), \epsilon\sim \cc{N}(0,\mathbf{I})}\left[\|s_\phi(x+\sigma\epsilon,\sigma) + \frac{\epsilon}{\sigma}\|_2^2\right]
+    \end{align*}\pause
+    \begin{center}
+        {\color{green!50!black} ¡Tractable!}
+    \end{center}
+\end{frame}
+
+\section{Por qué ``Denoising''}
+\begin{frame}{Por qué ``Denoising''}
+
+    Los modelos estudiados se denominan ``Denoising'' Score Matching, pero hasta ahora tan solo hemos hablado de inyectar ruido a los datos.\pause
+    \begin{lemma}[Fórmula de Tweedie]
+        Sea $p_\sigma(\tilde{x}|x) = \cc{N}(\tilde{x};\alpha x,\sigma^2\mathbf{I})$, con $\alpha\footnote{En nuestro caso, $\alpha=1$.}\in\mathbb{R}^*$. Entonces:
+        \begin{equation*}
+            \alpha \bb{E}[x|\tilde{x}] = \tilde{x} + \sigma^2 s_{p_\sigma}(\tilde{x}) = \tilde{x} + \sigma^2 \nabla_{\tilde{x}}\log p_\sigma(\tilde{x})
+        \end{equation*}
+    \end{lemma}
+    
+    $E[x|\tilde{x}]$ es el estimador de mínima varianza de $x$ dado $\tilde{x}$, por lo que se puede entender como una forma de ``denoising'' de $\tilde{x}$.\pause
+
+    \begin{center}
+        ¿Podemos emplearlo de forma directa como \emph{denoiser}?\pause\\
+        No. Como en los DDPM, puede ser una distribución multimodal, y el estimador $\bb{E}[x|\tilde{x}]$ puede no pertenecer a ninguna de las modas.
+    \end{center}
+
+
+\end{frame}
+
+    
+
+
+
+
+
+
+\begin{frame}[allowframebreaks]{Bibliografía}
+    \nocite{lai2026principlesdiffusionmodels}
+    \printbibliography
+\end{frame}
+
+
+
+
+\end{document}
