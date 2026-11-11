@@ -82,7 +82,7 @@
 \end{frame}
 
 \begin{frame}{Entrenamiento de un EBM usando Score Matching}
-    En vez de minimizar $\cc{D}_\text{KL}(p_\text{data}\|p_\phi)$, se minimiza\footnote{No se llegará al mismo resultado} $\cc{D}_\text{F}(p_\text{data}\|p_\phi)$:
+    En vez de minimizar $\cc{D}_\text{KL}(p_\text{data}\|p_\phi)$, se minimiza\footnote{No se llegará al mismo resultado.} $\cc{D}_\text{F}(p_\text{data}\|p_\phi)$:
     \begin{align*}
         \cc{L}_\text{SM}(\phi) &= \frac{1}{2}\cc{D}_\text{F}(p_\text{data}\|p_\phi) = \frac{1}{2}\bb{E}_{x\sim p_\text{data}}[\|s_\phi(x) - s_\text{data}(x)\|_2^2] \\
         &= \frac{1}{2}\bb{E}_{x\sim p_\text{data}}[\|\nabla_x \log p_\phi(x) - \nabla_x \log p_\text{data}(x)\|_2^2] \\
@@ -119,7 +119,7 @@
     \begin{definitionblock}{Langevin Sampling en Tiempo Continuo}
         Sea $p:\bb{R}^D\to \bb{R}^+_0$ una función de densidad. El proceso de Langevin en tiempo continuo es:
         \begin{equation*}
-            dx = \nabla_x \log p(x)\ dt + \sqrt{2}\ dW_t
+            dx = \nabla_x \log p(x)\ dt + \sqrt{2}\ dW(t)
         \end{equation*}
         donde $W(t)$ es un movimiento Browniano estándar en $\bb{R}^D$.
     \end{definitionblock}
@@ -164,7 +164,7 @@
             \log p_\text{data}(x) \approx \log p_\text{data}(x^*) + \frac{1}{2}(x-x^*)^t \nabla_x^2 \log p_\text{data}(x^*) (x-x^*)
         \end{equation*}
         \pause
-        Si $\nabla_x^2 \log p_\text{data}(x^*)$ es negativa definida, entonces $x^*$ es un máximo local de $\log p_\text{data}(x)$, y por tanto un punto de alta probabilidad.\pause
+        Si $\nabla_x^2 \log p_\text{data}(x^*)$ es definida negativa, entonces $x^*$ es un máximo local de $\log p_\text{data}(x)$, y por tanto un punto de alta probabilidad.\pause
 
         Si es definida negativa, entonces todos los autovalores de $\nabla_x^2 \log p_\text{data}(x^*)$ son negativos, y por tanto $\tr(\nabla_x^2 \log p_\text{data}(x^*)) < 0$. Por tanto, minimizar $\tr(\nabla_x s_\phi(x))$ fomenta que sea definida negativa, \emph{aunque no garantiza que lo sea (podría tener autovalores positivos aunque la suma de los autovalores sea negativa)}.
 
